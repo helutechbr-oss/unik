@@ -39,8 +39,12 @@ jobs:
         env:
           PROVISIONING_PROFILE_BASE64: ${{ secrets.PROVISIONING_PROFILE_BASE64 }}
         run: |
+          # Limpar profiles antigos para não dar conflito
+          rm -rf ~/Library/MobileDevice/Provisioning\ Profiles/*.mobileprovision
           mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
+          # Decodificar o novo profile
           echo -n "$PROVISIONING_PROFILE_BASE64" | base64 --decode -o ~/Library/MobileDevice/Provisioning\ Profiles/Luiz.mobileprovision
+          echo "Profile instalado com sucesso!"
 
       - name: Capacitor Sync
         run: npx cap sync ios
