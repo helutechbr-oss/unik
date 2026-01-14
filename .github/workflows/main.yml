@@ -42,7 +42,7 @@ jobs:
           # Limpar profiles antigos para não dar conflito
           rm -rf ~/Library/MobileDevice/Provisioning\ Profiles/*.mobileprovision
           mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
-          # Decodificar o novo profile
+          # Decodificar o novo profile (Build Forçado em: 14/01/2026 14:35)
           echo -n "$PROVISIONING_PROFILE_BASE64" | base64 --decode -o ~/Library/MobileDevice/Provisioning\ Profiles/Luiz.mobileprovision
           echo "Profile instalado com sucesso!"
 
