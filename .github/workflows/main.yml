@@ -73,17 +73,19 @@ jobs:
           <plist version="1.0">
           <dict>
               <key>method</key>
-              <string>ad-hoc</string>
+              <string>app-store</string>
               <key>teamID</key>
               <string>${{ secrets.APPLE_TEAM_ID }}</string>
+              <key>uploadSymbols</key>
+              <true/>
               <key>compileBitcode</key>
               <false/>
               <key>signingStyle</key>
               <string>manual</string>
               <key>provisioningProfiles</key>
               <dict>
-                  <key>br.com.unikprotege</key>
-                  <string>Luiz</string>
+                  <key>br.com.unikprotege.rastreador</key>
+                  <string>Luiz_Final</string>
               </dict>
           </dict>
           </plist>
@@ -93,6 +95,29 @@ jobs:
                      -archivePath ios/App/App.xcarchive \
                      -exportOptionsPlist exportOptions.plist \
                      -exportPath build/ios
+
+      - name: Upload to TestFlight
+        env:
+          API_KEY_BASE64: ${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY }}
+          KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+        run: |
+          mkdir -p ~/.private_keys
+          echo -n "$API_KEY_BASE64" | base64 --decode -o ~/.private_keys/AuthKey_$KEY_ID.p8
+          
+          # Validar o arquivo IPA antes de subir
+          xcrun altool --validate-app \
+                       -f build/ios/*.ipa \
+                       -t ios \
+                       --apiKey $KEY_ID \
+                       --apiIssuer $ISSUER_ID
+          
+          # Fazer o upload subir
+          xcrun altool --upload-app \
+                       -f build/ios/*.ipa \
+                       -t ios \
+                       --apiKey $KEY_ID \
+                       --apiIssuer $ISSUER_ID
 
       - name: Upload IPA Artifact
         uses: actions/upload-artifact@v4
