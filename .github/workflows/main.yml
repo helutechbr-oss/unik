@@ -31,6 +31,6 @@ jobs:
 
       - name: Build iOS App
         run: |
-          npx cap build ios --no-open
+          npx cap build ios
         # Nota: Para gerar um .ipa assinado para a loja, você precisará configurar
         # certificados e profiles nos Secrets do GitHub.
