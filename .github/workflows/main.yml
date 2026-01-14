@@ -61,7 +61,7 @@ jobs:
                      archive \
                      ALLOW_PROVISIONING_DEVICE_REGISTRATION=NO \
                      CODE_SIGN_STYLE=Manual \
-                     PROVISIONING_PROFILE_SPECIFIER=Luiz_Final \
+                     PROVISIONING_PROFILE_SPECIFIER=Luiz_TestFlight \
                      DEVELOPMENT_TEAM=${{ secrets.APPLE_TEAM_ID }} \
                      CODE_SIGN_IDENTITY="Apple Distribution"
 
@@ -85,7 +85,7 @@ jobs:
               <key>provisioningProfiles</key>
               <dict>
                   <key>br.com.unikprotege.rastreador</key>
-                  <string>Luiz_Final</string>
+                  <string>Luiz_TestFlight</string>
               </dict>
           </dict>
           </plist>
