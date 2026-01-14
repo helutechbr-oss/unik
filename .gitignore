@@ -1,0 +1,12 @@
+node_modules/
+dist/
+www/
+ios/App/public/
+ios/App/Pods/
+ios/App/.bundle/
+ios/App/build/
+.DS_Store
+*.log
+.github/workflows/main.yml.save
+# Não ignore o www se você não tiver um processo de build que o gera. 
+# No seu caso, o www é onde estão seus arquivos originais agora, então NÃO o ignore.
