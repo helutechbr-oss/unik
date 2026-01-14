@@ -77,7 +77,7 @@ jobs:
               <string>manual</string>
               <key>provisioningProfiles</key>
               <dict>
-                  <key>com.unik.rastreia</key>
+                  <key>br.com.unikprotege</key>
                   <string>Luiz</string>
               </dict>
           </dict>
