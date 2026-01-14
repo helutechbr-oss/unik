@@ -20,17 +20,18 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Build Web Assets
-        run: |
-          # Se você tiver um script de build (ex: npm run build), coloque aqui.
-          # Como seu projeto é HTML puro na pasta www, apenas garantimos que ela existe.
-          mkdir -p www
-
       - name: Capacitor Sync
         run: npx cap sync ios
 
       - name: Build iOS App
         run: |
+          # Tentativa de build sem exportar (apenas compilação)
+          # Para gerar o .ipa Real, os Secrets P12_BASE64 e PROVISIONING_PROFILE_BASE64 são necessários
           npx cap build ios
-        # Nota: Para gerar um .ipa assinado para a loja, você precisará configurar
-        # certificados e profiles nos Secrets do GitHub.
+
+      - name: Upload Build Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-build
+          path: ios/App/build/
+          if-no-files-found: warn
