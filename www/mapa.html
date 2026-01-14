@@ -1,0 +1,1720 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <link rel="manifest" href="manifest.json">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Unik Rastreia">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#0f172a">
+    <title>Rastreamento & Gestão</title>
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@500;600;700&display=swap"
+        rel="stylesheet">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+
+    <style>
+        :root {
+            --navy-dark: #0f172a;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --gray: #64748b;
+            --white: #ffffff;
+            --blue-bright: #2563eb;
+        }
+
+        /* Reset e Base */
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', sans-serif;
+            background: #e2e8f0;
+            height: 100vh;
+            width: 100vw;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* HEADER */
+        .top-bar {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            width: auto;
+            z-index: 1000;
+            padding: 16px 20px;
+            display: flex;
+            justify-content: space-between;
+            pointer-events: none;
+            background: linear-gradient(180deg, rgba(15, 23, 42, 0.6) 0%, rgba(0, 0, 0, 0) 100%);
+        }
+
+        .btn-back,
+        .btn-action {
+            pointer-events: auto;
+            background: white;
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            color: var(--navy-dark);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .btn-back:active,
+        .btn-action:active {
+            transform: scale(0.95);
+        }
+
+        .action-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            pointer-events: auto;
+        }
+
+        /* MAPA */
+        #map {
+            flex: 1;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        /* MAP ADDRESS FLOATING PILL */
+        .map-address-pill {
+            position: absolute;
+            bottom: 52vh;
+            /* Just above panel */
+            left: 50%;
+            transform: translateX(-50%);
+            background: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--navy-dark);
+            z-index: 900;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            max-width: 90%;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            border: 1px solid #e2e8f0;
+            transition: bottom 0.3s;
+            /* Smooth transition if panel moves */
+        }
+
+        .map-address-pill i {
+            color: var(--gold);
+            font-size: 14px;
+        }
+
+        /* PAINEL INFERIOR */
+        .bottom-panel {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            width: auto;
+            background: white;
+            z-index: 1000;
+            border-radius: 24px 24px 0 0;
+            padding: 16px 20px;
+            box-shadow: 0 -5px 25px rgba(0, 0, 0, 0.1);
+            height: 50vh;
+            /* Fixed 40% */
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            /* NO SCROLL */
+        }
+
+        /* HEADER DO PAINEL */
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 8px;
+            flex-shrink: 0;
+        }
+
+        .car-info h2 {
+            font-size: 20px;
+            margin: 0;
+            color: var(--navy-dark);
+            line-height: 1.2;
+        }
+
+        .car-info p {
+            font-size: 14px;
+            color: var(--text-gray);
+            margin: 0;
+        }
+
+        .header-end {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 6px;
+        }
+
+        .odometer-badge {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--navy-dark);
+            background: #f1f5f9;
+            padding: 4px 10px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            border: 1px solid #e2e8f0;
+        }
+
+        /* GRID PREMIUM - 3 COLUNAS (2 LINHAS) */
+        .info-premium-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-bottom: 2px;
+            flex-shrink: 0;
+        }
+
+        .data-card {
+            background: white;
+            border-radius: 12px;
+            padding: 4px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 2px;
+            text-align: center;
+            border: 1px solid #f1f5f9;
+            box-shadow: 0 2px 5px rgba(148, 163, 184, 0.1);
+            height: 60px;
+            /* Mais compacto */
+        }
+
+        .data-icon {
+            font-size: 18px;
+            color: var(--navy-light);
+            margin-bottom: 0;
+        }
+
+        .data-val {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--navy-dark);
+            line-height: 1.1;
+        }
+
+        .data-label {
+            font-size: 8px;
+            text-transform: uppercase;
+            color: #94a3b8;
+            font-weight: 600;
+        }
+
+        /* Removed address-box completely as we have the pill */
+        .address-box {
+            display: none !important;
+        }
+
+        .connection-status {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .signal-bars {
+            display: flex;
+            gap: 2px;
+            align-items: flex-end;
+            height: 10px;
+            margin-bottom: 2px;
+        }
+
+        .bar {
+            width: 3px;
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+
+        .bar.active {
+            background: var(--success);
+        }
+
+        /* BOTÕES DE COMANDO - VISÍVEIS E ORGANIZADOS */
+        .command-row {
+            display: none;
+            /* JS toggles to flex */
+            gap: 8px;
+            margin-top: auto;
+            /* Empurra para baixo */
+            padding-top: 2px;
+            flex-shrink: 0;
+            width: 100%;
+        }
+
+        .btn-cmd {
+            flex: 1;
+            padding: 0;
+            /* Let height control */
+            border: none;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 10px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            color: white;
+            min-height: 40px;
+            /* Compact height */
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-cmd i {
+            font-size: 18px;
+            margin: 0;
+        }
+
+        .btn-cmd:active {
+            opacity: 0.9;
+            transform: scale(0.98);
+        }
+
+        .car-info {
+            max-width: 60%;
+        }
+
+        .car-info h2 {
+            margin: 0;
+            font-family: 'Poppins', sans-serif;
+            font-size: 18px;
+            color: var(--navy-dark);
+            font-weight: 700;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .car-info p {
+            margin: 0;
+            font-size: 12px;
+            color: var(--gray);
+        }
+
+        .status-badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            white-space: nowrap;
+        }
+
+        .st-moving {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .st-stopped {
+            background: #fef3c7;
+            color: #b45309;
+        }
+
+        .st-offline {
+            background: #f1f5f9;
+            color: #64748b;
+        }
+
+
+
+        .cmd-block {
+            background: var(--danger);
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+        }
+
+        .cmd-unblock {
+            background: var(--success);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+        }
+
+        /* GAVETA DE HISTÓRICO */
+        .drawer {
+            position: fixed;
+            top: 0;
+            right: 0;
+            width: 85%;
+            max-width: 320px;
+            height: 100%;
+            background: white;
+            z-index: 3000;
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
+            box-shadow: -5px 0 25px rgba(0, 0, 0, 0.2);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .drawer.active {
+            transform: translateX(0);
+        }
+
+        .drawer-header {
+            padding: 20px;
+            background: var(--navy-dark);
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .drawer-body {
+            padding: 20px;
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 12px;
+            color: var(--gray);
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            font-family: 'Inter', sans-serif;
+            box-sizing: border-box;
+        }
+
+        .btn-drawer {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .btn-search {
+            background: var(--navy-dark);
+            color: var(--white);
+        }
+
+        .btn-pdf {
+            background: var(--white);
+            color: var(--navy-dark);
+            border: 1px solid var(--navy-dark);
+        }
+
+        /* LOADING */
+        .loading-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.95);
+            z-index: 2000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 0.5s;
+        }
+
+        /* MARKER DO MAPA */
+        .custom-marker {
+            width: 44px;
+            height: 44px;
+            border: 3px solid white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            color: white;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s;
+        }
+
+        .bg-moving {
+            background: var(--success);
+        }
+
+        .bg-stopped {
+            background: var(--warning);
+        }
+
+        .bg-offline {
+            background: var(--gray);
+        }
+
+        .pulse-ring {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            border: 4px solid var(--success);
+            opacity: 0;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+                opacity: 0.8;
+            }
+
+            100% {
+                transform: scale(2);
+                opacity: 0;
+            }
+        }
+
+        /* MEDIA QUERIES */
+        @media (max-width: 360px) {
+            .bottom-panel {
+                padding: 16px;
+                padding-bottom: 24px;
+            }
+
+            .car-info h2 {
+                font-size: 16px;
+            }
+
+            .info-grid {
+                gap: 6px;
+            }
+
+            .info-val {
+                font-size: 12px;
+            }
+
+            .btn-cmd {
+                font-size: 11px;
+                padding: 10px;
+            }
+        }
+
+        /* MODAL GEOFENCE */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(15, 23, 42, 0.8);
+            z-index: 4000;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal-box {
+            background: white;
+            width: 100%;
+            max-width: 320px;
+            border-radius: 20px;
+            padding: 24px;
+            text-align: center;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        }
+
+        /* AUTOCOMPLETE */
+        .suggestions-list {
+            position: absolute;
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            width: calc(100% - 48px);
+            /* Adjust for padding of modal */
+            max-width: 272px;
+            /* fallback width */
+            max-height: 150px;
+            overflow-y: auto;
+            z-index: 5000;
+            display: none;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            text-align: left;
+            margin-top: 5px;
+        }
+
+        .suggestion-item {
+            padding: 10px;
+            border-bottom: 1px solid #f1f5f9;
+            font-size: 12px;
+            cursor: pointer;
+            color: var(--navy-dark);
+        }
+
+        .suggestion-item:hover {
+            background: #f8fafc;
+        }
+
+        /* PANEL CERCA VISUAL */
+        .geo-panel {
+            position: absolute;
+            bottom: 120px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 90%;
+            max-width: 320px;
+            background: white;
+            padding: 20px;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            z-index: 2000;
+            display: none;
+            text-align: center;
+            animation: slideUp 0.3s ease;
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translate(-50%, 20px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translate(-50%, 0);
+                opacity: 1;
+            }
+        }
+
+        .geo-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            font-weight: 700;
+            color: var(--navy-dark);
+        }
+
+        .geo-radius-display {
+            font-size: 14px;
+            background: #e2e8f0;
+            padding: 4px 10px;
+            border-radius: 10px;
+            color: var(--navy-dark);
+        }
+
+        .geo-slider-container {
+            margin: 20px 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .geo-slider {
+            flex: 1;
+            accent-color: var(--blue-bright);
+            height: 6px;
+            cursor: pointer;
+        }
+
+        .geo-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .btn-geo-cancel {
+            flex: 1;
+            padding: 12px;
+            border-radius: 12px;
+            border: 1px solid #cbd5e1;
+            background: #f8fafc;
+            color: #475569;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .btn-geo-save {
+            flex: 1;
+            padding: 12px;
+            border-radius: 12px;
+            border: none;
+            background: var(--blue-bright);
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="loading" class="loading-overlay">
+        <i class="ph ph-spinner-gap ph-spin" style="font-size: 40px; color: var(--navy-dark);"></i>
+        <p style="margin-top: 15px; font-weight: 600; color: #64748b;">Conectando...</p>
+    </div>
+
+    <div id="toast"
+        style="position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: #333; color: white; padding: 10px 20px; border-radius: 30px; font-size: 12px; z-index: 5000; display: none; white-space: nowrap; max-width: 90%;">
+    </div>
+
+    <div class="top-bar">
+        <button class="btn-back" onclick="window.location.href='home.html'">
+            <i class="ph ph-caret-left"></i>
+        </button>
+        <div class="action-group">
+            <button class="btn-action" onclick="fitAllVehicles()" title="Ver Todos Veículos">
+                <i class="ph-bold ph-frame-corners"></i>
+            </button>
+            <button class="btn-action" onclick="toggleHistory()" title="Histórico e Relatórios">
+                <i class="ph-bold ph-clock-counter-clockwise"></i>
+            </button>
+            <button class="btn-action" onclick="toggleLayer()" title="Camadas">
+                <i class="ph-bold ph-globe-hemisphere-west"></i>
+            </button>
+        </div>
+    </div>
+
+    <div id="map"></div>
+    <div id="uiAddressPill" class="map-address-pill">
+        <i class="ph-fill ph-spinner ph-spin" style="color:var(--navy-dark)"></i> Buscando...
+    </div>
+
+    <div class="bottom-panel">
+        <div class="panel-header">
+            <div class="car-info">
+                <h2 id="uiModel">Carregando...</h2>
+                <p id="uiPlate">...</p>
+            </div>
+            <div class="header-end">
+                <div class="odometer-badge">
+                    <i class="ph-bold ph-road-horizon" style="color:var(--navy-light)"></i>
+                    <span id="uiOdometer">0 km</span>
+                </div>
+                <div id="uiBadge" class="status-badge st-offline">
+                    <i class="ph-fill ph-wifi-slash"></i> Conectando
+                </div>
+            </div>
+        </div>
+
+        <div class="info-premium-grid">
+            <!-- Ignition Status -->
+            <div class="data-card">
+                <i class="ph-bold ph-key data-icon" id="iconIgnition" style="color:var(--gray)"></i>
+                <span class="data-val" id="uiIgnition">---</span>
+                <span class="data-label">Ignição</span>
+            </div>
+
+            <!-- Speed -->
+            <div class="data-card">
+                <i class="ph-bold ph-speedometer data-icon"></i>
+                <span class="data-val" id="uiSpeed">0 km/h</span>
+                <span class="data-label">Velocidade</span>
+            </div>
+
+
+
+            <!-- Battery (Mock/Future) -->
+            <div class="data-card">
+                <i class="ph-bold ph-battery-high data-icon" style="color:#10b981;"></i>
+                <span class="data-val" id="uiBattery">Ok</span>
+                <span class="data-label">Bateria</span>
+            </div>
+
+            <!-- Hour Meter (Mock/Future) -->
+            <div class="data-card" style="display:none;" id="boxHourMeter">
+                <i class="ph-bold ph-timer data-icon"></i>
+                <span class="data-val" id="uiHorimetro">---</span>
+                <span class="data-label">Horímetro</span>
+            </div>
+
+            <!-- Sats -->
+            <div class="data-card">
+                <i class="ph-bold ph-broadcast data-icon"></i>
+                <span class="data-val" id="uiSats">---</span>
+                <span class="data-label">Satélites</span>
+            </div>
+
+            <!-- Connection -->
+            <div class="data-card">
+                <div class="signal-bars">
+                    <div class="bar active"></div>
+                    <div class="bar active"></div>
+                    <div class="bar active"></div>
+                    <div class="bar"></div>
+                </div>
+                <span class="data-val" id="uiSignalStatus" style="font-size:11px; margin-top:4px;">Online</span>
+                <span class="data-label">Conexão</span>
+            </div>
+
+            <!-- Lock Status -->
+            <div class="data-card">
+                <i class="ph-bold ph-lock-key-open data-icon" id="uiLockIcon" style="color:var(--success)"></i>
+                <span class="data-val" id="uiLockStatus">Lib.</span>
+                <span class="data-label">Bloqueio</span>
+            </div>
+        </div>
+
+        <div
+            style="display: flex; justify-content: space-between; align-items: center; padding: 0 4px 12px 4px; font-size:11px; color:#94a3b8;">
+            <span id="uiLastUpdate">Atualizado: --:--</span>
+            <span id="uiCourse" style="display:flex; align-items:center; gap:4px;"><i class="ph-bold ph-compass"></i>
+                --</span>
+        </div>
+
+        <div class="address-box">
+            <i class="ph-fill ph-map-pin" style="color: #d97706; font-size: 18px; flex-shrink: 0;"></i>
+            <span id="uiAddress">Aguardando coordenadas...</span>
+        </div>
+
+        <div id="commandSection" class="command-row">
+            <button class="btn-cmd cmd-block" onclick="confirmCommand('block')">
+                <i class="ph-bold ph-lock-key"></i> BLOQUEAR
+            </button>
+            <button class="btn-cmd cmd-unblock" onclick="confirmCommand('unblock')">
+                <i class="ph-bold ph-lock-key-open"></i> DESBLOQUEAR
+            </button>
+            <button id="btnGeofence" class="btn-cmd"
+                style="background:var(--blue-bright); box-shadow: 0 4px 12px rgba(37,99,235,0.3);"
+                onclick="toggleGeofence()">
+                <i class="ph-bold ph-hexagon"></i> CERCA
+            </button>
+        </div>
+    </div>
+
+    <div id="historyDrawer" class="drawer">
+        <div class="drawer-header">
+            <span style="font-weight: 600;">Histórico & Relatórios</span>
+            <i class="ph-bold ph-x" onclick="toggleHistory()" style="cursor: pointer;"></i>
+        </div>
+        <div class="drawer-body">
+            <div class="form-group">
+                <label>Data/Hora Início</label>
+                <input type="datetime-local" id="histStart">
+            </div>
+            <div class="form-group">
+                <label>Data/Hora Fim</label>
+                <input type="datetime-local" id="histEnd">
+            </div>
+
+            <button class="btn-drawer btn-search" onclick="fetchHistory()">
+                <i class="ph-bold ph-magnifying-glass"></i> Buscar Rota
+            </button>
+
+            <button class="btn-drawer btn-pdf" onclick="generatePDF()">
+                <i class="ph-bold ph-file-pdf"></i> Gerar Relatório (PDF)
+            </button>
+
+            <div id="histStats" style="margin-top: 20px; font-size: 12px; color: #64748b; text-align: center;">
+            </div>
+        </div>
+    </div>
+
+    <div id="geoControlPanel" class="geo-panel">
+        <div class="geo-header">
+            <span>Ajustar Cerca</span>
+            <span id="geoRadiusVal" class="geo-radius-display">500 m</span>
+        </div>
+        <p style="font-size: 12px; color: var(--gray); margin-bottom: 10px;">Arraste o pino no mapa ou use a barra
+            abaixo para definir o raio.</p>
+
+        <div class="geo-slider-container">
+            <span style="font-size:10px; font-weight:600; color:var(--gray)">100m</span>
+            <input type="range" id="geoRadiusSlider" class="geo-slider" min="100" max="5000" step="100" value="500"
+                oninput="updateGeoPreview(this.value)">
+            <span style="font-size:10px; font-weight:600; color:var(--gray)">5km</span>
+        </div>
+
+        <div class="geo-actions">
+            <button class="btn-geo-cancel" onclick="cancelGeofenceEdit()">Cancelar</button>
+            <button class="btn-geo-save" onclick="saveGeofenceEdit()">Salvar Cerca</button>
+        </div>
+    </div>
+
+    <script type="module">
+        import { auth, db } from './js/config.js';
+        import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { doc, onSnapshot, collection, query, where, getDocs, orderBy, limit, Timestamp, updateDoc, addDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        const BACKEND_URL = 'http://35.198.58.216:3000';
+
+        // Mapa
+        const map = L.map('map', { zoomControl: false }).setView([-23.550520, -46.633308], 5);
+        const streetLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', { attribution: '&copy; OpenStreetMap', maxZoom: 19 });
+        const satLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { attribution: '&copy; Esri', maxZoom: 19 });
+        streetLayer.addTo(map);
+
+        // Globals
+        let markers = {}; // { vid: Marker }
+        let vehicleDataCache = {}; // { vid: {data} }
+        let selectedVehicleId = null;
+        let routePolyline = null;
+        let activeImei = null; // Para comandos (do selecionado)
+        let historyDataCache = [];
+        let hasCenteredMap = false; // Controle de zoom inicial
+        const allMarkersGroup = new L.FeatureGroup();
+        // activeGeofence definido localmente no bloco da cerca
+
+        let unsubscribers = [];
+
+        // 1. Inicia
+        const urlParams = new URLSearchParams(window.location.search);
+        const urlVehicleId = urlParams.get('id');
+
+        if (urlVehicleId) {
+            initSingleVehicle(urlVehicleId);
+        } else {
+            onAuthStateChanged(auth, user => {
+                if (user) initAllVehicles(user.uid);
+                else window.location.href = 'login.html';
+            });
+        }
+
+        function initSingleVehicle(vid) {
+            setupVehicleListener(vid, true);
+        }
+
+        async function initAllVehicles(uid) {
+            const q = query(collection(db, "tenants", "UNIK", "vehicles"), where("userId", "==", uid));
+            const snap = await getDocs(q);
+            if (snap.empty) { dismissLoading(); showToast("Nenhum veículo encontrado."); return; }
+
+            snap.forEach(d => setupVehicleListener(d.id, false));
+        }
+
+        function setupVehicleListener(vid, autoFocus) {
+            const unsub = onSnapshot(doc(db, "tenants", "UNIK", "vehicles", vid), (docSnap) => {
+                if (!docSnap.exists()) return;
+                const vData = docSnap.data();
+                vehicleDataCache[vid] = vData;
+
+                // Se for single mode, seleciona automaticamente
+                if (autoFocus) {
+                    selectVehicle(vid);
+                }
+                // Se já estiver selecionado, atualiza UI
+                else if (selectedVehicleId === vid) {
+                    updateStaticInfo(vData);
+                    checkBlocker(vData);
+                    // Update Geofence from listener (sync)
+                    if (vData.geofence) renderGeofenceFromData(vData.geofence);
+                    else renderGeofenceFromData(null);
+                }
+
+                if (vData.trackerId) subscribeToTrackerById(vData.trackerId, vid);
+                else if (vData.imei) subscribeToTrackerByImei(vData.imei, vid);
+                else dismissLoading();
+            });
+            unsubscribers.push(unsub);
+        }
+
+
+
+        // --- SUBSCRIPTIONS ---
+        function subscribeToTrackerById(trackerId, vid) {
+            const unsub = onSnapshot(doc(db, "tenants", "UNIK", "trackers", trackerId), (snap) => {
+                if (snap.exists()) {
+                    const data = snap.data();
+                    if (selectedVehicleId === vid) activeImei = data.imei;
+                    processTrackerData(data, vid);
+                }
+            });
+            unsubscribers.push(unsub);
+        }
+
+        function subscribeToTrackerByImei(imei, vid) {
+            const cleanImei = String(imei).trim();
+            const q = query(collection(db, "tenants", "UNIK", "trackers"), where("imei", "==", cleanImei));
+            const unsub = onSnapshot(q, (snap) => {
+                if (!snap.empty) {
+                    const docT = snap.docs[0];
+                    const data = docT.data();
+                    if (vehicleDataCache[vid]) vehicleDataCache[vid].trackerId = docT.id;
+
+                    if (selectedVehicleId === vid) activeImei = cleanImei;
+                    processTrackerData(data, vid);
+                } else {
+                    dismissLoading();
+                }
+            });
+            unsubscribers.push(unsub);
+        }
+
+        // --- FIT ALL VEHICLES ---
+        window.fitAllVehicles = function () {
+            if (allMarkersGroup && allMarkersGroup.getLayers().length > 0) {
+                // Deselect current if any
+                selectedVehicleId = null;
+                activeImei = null;
+                // Hide specific UI parts? Keep last state or reset?
+                // For now just fit bounds and uncenter follow mode
+                map.fitBounds(allMarkersGroup.getBounds(), { padding: [50, 50] });
+                hasCenteredMap = true; // Stop auto-centering on single vehicle
+
+                // Show toast
+                showToast("Visualizando todos os veículos");
+            } else {
+                showToast("Nenhum veículo no mapa.");
+            }
+        }
+
+        // --- CENTERING LOGIC WITH OFFSET ---
+        function centerOnVehicleWithOffset(lat, lng) {
+            // Panel ocupa 50vh. Mapa visível é top 50%.
+            // Queremos o veículo no centro da área visível (25% do topo).
+            // Centro geométrico do mapa (Leaflet) é 50% do topo.
+            // Precisamos que o CenterPoint do mapa esteja abaixo do veículo.
+            // Offset necessário: +25% da altura da tela (em pixels).
+
+            const mapHeight = map.getSize().y;
+            const targetPoint = map.project([lat, lng], 16).add([0, mapHeight * 0.25]);
+            const targetLatLng = map.unproject(targetPoint, 16);
+
+            map.setView(targetLatLng, 16, { animate: true });
+            hasCenteredMap = true;
+        }
+
+        window.selectVehicle = function (vid) {
+            // Limpa geofence anterior visualmente
+            if (activeGeofence) {
+                map.removeLayer(activeGeofence.layer);
+                if (activeGeofence.marker) map.removeLayer(activeGeofence.marker);
+                activeGeofence = null;
+                updateGeofenceButtonUI(false);
+            }
+
+            selectedVehicleId = vid;
+            const vData = vehicleDataCache[vid];
+            if (vData) {
+                updateStaticInfo(vData);
+                checkBlocker(vData);
+                if (vData.geofence) renderGeofenceFromData(vData.geofence);
+            }
+            // Centraliza no mapa com offset se houver marker
+            if (markers[vid]) {
+                const ll = markers[vid].getLatLng();
+                centerOnVehicleWithOffset(ll.lat, ll.lng);
+                markers[vid].openPopup();
+                // Atualiza info dinâmica com dados do marker (hacky mas funciona se armazenado)
+            } else if (activeGeofence) {
+                map.fitBounds(activeGeofence.layer.getBounds());
+                hasCenteredMap = true;
+            }
+        }
+
+        function processTrackerData(data, vid) {
+            dismissLoading();
+            const now = new Date();
+            let isOnline = false;
+            let lastSignalDate = null;
+
+            if (data.lastSignal && data.lastSignal.toDate) {
+                lastSignalDate = data.lastSignal.toDate();
+                if ((now - lastSignalDate) / 60000 < 15) isOnline = true;
+            } else {
+                isOnline = false;
+            }
+
+            let status = !isOnline ? 'offline' : (data.ignition || data.speed > 0 ? 'moving' : 'stopped');
+
+            updateMap(data.lat, data.lng, status, vid);
+
+            if (vid === selectedVehicleId) {
+                updateDynamicInfo(data, status, lastSignalDate);
+                // ALWAYS CENTER (Follow Mode) if selected
+                if (data.lat && data.lng) {
+                    centerOnVehicleWithOffset(data.lat, data.lng);
+                }
+            }
+        }
+
+        function updateStaticInfo(v) {
+            document.getElementById('uiModel').innerText = v.model || "Veículo";
+            document.getElementById('uiPlate').innerText = v.plate || "---";
+            window.currentVehicleData = v;
+        }
+
+
+
+        function updateDynamicInfo(data, status, date) {
+            const badge = document.getElementById('uiBadge');
+            const sigText = document.getElementById('uiSignalStatus');
+            const bars = document.querySelectorAll('.bar');
+
+            // 1. Badge Status & Signal
+            if (status === 'moving') {
+                badge.className = 'status-badge st-moving';
+                badge.innerHTML = '<i class="ph-fill ph-navigation-arrow"></i> Em Movimento';
+                if (sigText) sigText.innerText = 'Online';
+                if (bars.length) bars.forEach(b => b.classList.add('active'));
+            } else if (status === 'stopped') {
+                badge.className = 'status-badge st-stopped';
+                badge.innerHTML = '<i class="ph-fill ph-hand-palm"></i> Parado';
+                if (sigText) sigText.innerText = 'Online';
+                if (bars.length) bars.forEach(b => b.classList.add('active'));
+            } else {
+                badge.className = 'status-badge st-offline';
+                badge.innerHTML = '<i class="ph-fill ph-wifi-slash"></i> Sem Sinal';
+                if (sigText) sigText.innerText = 'Offline';
+                if (bars.length) {
+                    bars.forEach(b => b.classList.remove('active'));
+                    bars[0].classList.add('active');
+                }
+            }
+
+            // 2. Speed
+            const spdEl = document.getElementById('uiSpeed');
+            if (spdEl) spdEl.innerText = (data.speed || 0) + ' km/h';
+
+            // 3. Ignition (Virtual + Real)
+            const ignEl = document.getElementById('uiIgnition');
+            const iconIgn = document.getElementById('iconIgnition');
+            const isIgn = data.ignition || (data.speed > 3);
+
+            if (ignEl) {
+                ignEl.innerText = isIgn ? 'Ligada' : 'Deslig.';
+                ignEl.style.color = isIgn ? 'var(--success)' : 'var(--text-dark)';
+            }
+            if (iconIgn) {
+                iconIgn.style.color = isIgn ? 'var(--success)' : 'var(--gray)';
+                iconIgn.className = isIgn ? 'ph-bold ph-key' : 'ph-bold ph-key-slash';
+            }
+
+            // 4. Odometer (Header Badge)
+            let odoVal = data.odometer;
+            if (odoVal === undefined && vehicleDataCache[selectedVehicleId]) {
+                odoVal = vehicleDataCache[selectedVehicleId].odometer;
+            }
+            if (odoVal === undefined) odoVal = 0;
+            const odoEl = document.getElementById('uiOdometer');
+            if (odoEl) odoEl.innerText = Math.floor(odoVal) + ' km';
+
+            // 5. Sats
+            const satEl = document.getElementById('uiSats');
+            if (satEl) satEl.innerText = (data.sats || 0);
+
+            // 6. Lock Status
+            const vCache = vehicleDataCache[selectedVehicleId];
+            const isBlocked = vCache && vCache.status === 'blocked';
+            const lockStatusEl = document.getElementById('uiLockStatus');
+            const lockIcon = document.getElementById('uiLockIcon');
+
+            if (lockStatusEl) {
+                lockStatusEl.innerText = isBlocked ? 'Bloq.' : 'Lib.';
+                lockStatusEl.style.color = isBlocked ? 'var(--danger)' : 'var(--success)';
+            }
+            if (lockIcon) {
+                lockIcon.className = isBlocked ? 'ph-bold ph-lock-key' : 'ph-bold ph-lock-key-open';
+                lockIcon.style.color = isBlocked ? 'var(--danger)' : 'var(--success)';
+            }
+
+            // Also color ignition icon red if blocked? User said "Bloqueador liberado" -> buttons appear.
+            // But let's keep status display consistent.
+
+            // 7. Last Update & Course
+            let timeStr = '--:--';
+            if (date) {
+                timeStr = date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            }
+            const timeEl = document.getElementById('uiLastUpdate');
+            if (timeEl) timeEl.innerText = 'Atualizado: ' + timeStr;
+
+            const course = data.course || 0;
+            const directions = ['N', 'NE', 'L', 'SE', 'S', 'SW', 'O', 'NW'];
+            const dirIndex = Math.round(((course % 360) / 45)) % 8;
+            const dirTxt = directions[dirIndex];
+            const courseEl = document.getElementById('uiCourse');
+            if (courseEl) courseEl.innerHTML = `<i class="ph-bold ph-compass" style="transform: rotate(${course}deg)"></i> ${dirTxt}`;
+        }
+
+        function updateMap(lat, lng, status, vid) {
+            const nLat = Number(lat), nLng = Number(lng);
+            if (isNaN(nLat) || isNaN(nLng) || (nLat === 0 && nLng === 0)) return;
+            const pos = [nLat, nLng];
+
+            let bg = 'bg-offline', icon = 'ph-wifi-slash', pulse = '';
+            if (status === 'moving') { bg = 'bg-moving'; icon = 'ph-navigation-arrow'; pulse = '<div class="pulse-ring"></div>'; }
+            if (status === 'stopped') { bg = 'bg-stopped'; icon = 'ph-hand-palm'; }
+
+            const customIcon = L.divIcon({
+                className: 'custom-div-icon',
+                html: `<div class="custom-marker ${bg}">${pulse}<i class="ph-fill ${icon}"></i></div>`,
+                iconSize: [44, 44], iconAnchor: [22, 22]
+            });
+
+            if (!markers[vid]) {
+                const marker = L.marker(pos, { icon: customIcon }).addTo(map);
+                marker.on('click', () => selectVehicle(vid));
+                markers[vid] = marker;
+                allMarkersGroup.addLayer(marker);
+
+                // Se estiver no modo "Todos os Veículos", ajusta o zoom para incluir todos
+                if (!urlVehicleId) {
+                    map.fitBounds(allMarkersGroup.getBounds(), { padding: [80, 80], maxZoom: 16 });
+                }
+            } else {
+                markers[vid].setLatLng(pos).setIcon(customIcon);
+            }
+
+            // Auto-center on first load (Only for Single Mode)
+            if (urlVehicleId && vid === selectedVehicleId && !hasCenteredMap) {
+                map.setView(pos, 16);
+                hasCenteredMap = true;
+            }
+
+            if (vid === selectedVehicleId) {
+                fetchAddressDOM(nLat, nLng);
+                // NOTA: Não movemos a cerca automaticamente, pois ela é fixa na posição onde foi criada.
+                if (activeGeofence) checkGeofence(nLat, nLng);
+            }
+        }
+
+        // --- CERCA DIGITAL (MARKET STANDARD) ---
+        let activeGeofence = null; // { lat, lng, radius, layer, marker }
+        let hasAlertedGeofence = false;
+
+        // Edição
+        let isEditingGeofence = false;
+        let tempGeofenceCirc = null;
+        let tempGeofenceMarker = null;
+
+        function updateGeofenceButtonUI(isActive) {
+            const btn = document.getElementById('btnGeofence');
+            if (!btn) return;
+            if (isActive) {
+                btn.style.background = '#ef4444'; // Red (Danger/Remove)
+                btn.innerHTML = '<i class="ph-bold ph-trash"></i> REMOVER';
+                btn.onclick = toggleGeofence;
+            } else {
+                btn.style.background = 'var(--blue-bright)';
+                btn.innerHTML = '<i class="ph-bold ph-hexagon"></i> CERCA';
+                btn.onclick = toggleGeofence;
+            }
+        }
+
+        function renderGeofenceFromData(geoData) {
+            // Limpa existente
+            if (activeGeofence) {
+                if (activeGeofence.layer) map.removeLayer(activeGeofence.layer);
+                if (activeGeofence.marker) map.removeLayer(activeGeofence.marker);
+                activeGeofence = null;
+            }
+
+            if (!geoData || !geoData.enabled) {
+                updateGeofenceButtonUI(false);
+                return;
+            }
+
+            const center = [geoData.lat, geoData.lng];
+            const radius = geoData.radius;
+
+            const circle = L.circle(center, { color: '#2563eb', fillColor: '#3b82f6', fillOpacity: 0.15, weight: 2, radius: radius }).addTo(map);
+
+            // Icone central (âncora)
+            const cIcon = L.divIcon({
+                className: 'custom-div-icon',
+                html: `<div style="background:var(--blue-bright); width:16px; height:16px; border-radius:50%; border:2px solid white; box-shadow:0 2px 5px rgba(0,0,0,0.3);"></div>`,
+                iconSize: [16, 16], iconAnchor: [8, 8]
+            });
+            const marker = L.marker(center, { icon: cIcon }).addTo(map);
+
+            activeGeofence = { lat: geoData.lat, lng: geoData.lng, radius: radius, layer: circle, marker: marker };
+            updateGeofenceButtonUI(true);
+        }
+
+        window.toggleGeofence = function () {
+            if (!selectedVehicleId) { showToast("Selecione um veículo."); return; }
+
+            if (activeGeofence) {
+                if (confirm("Deseja REMOVER a Cerca Digital atual?")) {
+                    removeGeofence();
+                }
+            } else {
+                startGeofenceEdit();
+            }
+        }
+
+        function removeGeofence() {
+            updateDoc(doc(db, "tenants", "UNIK", "vehicles", selectedVehicleId), { geofence: null })
+                .then(() => {
+                    showToast("Cerca removida.");
+                })
+                .catch(e => showToast("Erro ao remover."));
+        }
+
+        function startGeofenceEdit() {
+            if (!markers[selectedVehicleId]) { showToast("Aguarde o carregamento do veículo..."); return; }
+
+            const vPos = markers[selectedVehicleId].getLatLng();
+            isEditingGeofence = true;
+
+            // Show Panel
+            document.getElementById('geoControlPanel').style.display = 'block';
+            document.getElementById('geoRadiusSlider').value = 500;
+            updateGeoPreview(500);
+
+            // Center map
+            map.setView(vPos, 16);
+        }
+
+        window.updateGeoPreview = function (radiusVal) {
+            const r = parseInt(radiusVal);
+            document.getElementById('geoRadiusVal').innerText = (r < 1000) ? r + " m" : (r / 1000).toFixed(1) + " km";
+
+            // Cria ou Atualiza Elementos Temporários
+            const vPos = markers[selectedVehicleId] ? markers[selectedVehicleId].getLatLng() : map.getCenter();
+
+            if (!tempGeofenceCirc) {
+                tempGeofenceCirc = L.circle(vPos, { color: '#2563eb', fillColor: '#3b82f6', fillOpacity: 0.2, dashArray: '5,5', weight: 2, radius: r }).addTo(map);
+            } else {
+                tempGeofenceCirc.setRadius(r);
+                if (!tempGeofenceMarker) tempGeofenceCirc.setLatLng(vPos);
+            }
+
+            if (!tempGeofenceMarker) {
+                const dragIcon = L.divIcon({
+                    className: 'custom-div-icon',
+                    html: `<div style="background:white; color:var(--blue-bright); width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center; box-shadow:0 4px 10px rgba(0,0,0,0.3); font-size:24px;"><i class="ph-fill ph-crosshair"></i></div>`,
+                    iconSize: [40, 40], iconAnchor: [20, 20]
+                });
+
+                tempGeofenceMarker = L.marker(vPos, { icon: dragIcon, draggable: true, zIndexOffset: 1000 }).addTo(map);
+
+                tempGeofenceMarker.on('drag', (e) => {
+                    tempGeofenceCirc.setLatLng(e.target.getLatLng());
+                });
+            }
+        }
+
+        window.cancelGeofenceEdit = function () {
+            isEditingGeofence = false;
+            document.getElementById('geoControlPanel').style.display = 'none';
+            if (tempGeofenceCirc) map.removeLayer(tempGeofenceCirc);
+            if (tempGeofenceMarker) map.removeLayer(tempGeofenceMarker);
+            tempGeofenceCirc = null;
+            tempGeofenceMarker = null;
+        }
+
+        window.saveGeofenceEdit = function () {
+            if (!tempGeofenceMarker) return;
+            const center = tempGeofenceMarker.getLatLng();
+            const radius = parseInt(document.getElementById('geoRadiusSlider').value);
+
+            showToast("Salvando Cerca...");
+
+            const geoData = {
+                enabled: true,
+                lat: center.lat,
+                lng: center.lng,
+                radius: radius
+            };
+
+            updateDoc(doc(db, "tenants", "UNIK", "vehicles", selectedVehicleId), { geofence: geoData })
+                .then(() => {
+                    showToast("Cerca Salva com Sucesso!");
+                    cancelGeofenceEdit();
+                })
+                .catch(e => {
+                    console.error(e);
+                    showToast("Erro ao salvar.");
+                });
+        }
+
+        function checkGeofence(lat, lng) {
+            if (!activeGeofence) return;
+            // Using Leaflet distanceTo (precise)
+            const cur = L.latLng(lat, lng);
+            const center = L.latLng(activeGeofence.lat, activeGeofence.lng);
+            const dist = cur.distanceTo(center); // meters
+
+            if (dist > activeGeofence.radius) {
+                if (!hasAlertedGeofence) {
+                    showToast("🚨 ALERTA: VEÍCULO SAIU DA CERCA!");
+                    hasAlertedGeofence = true;
+                }
+            } else {
+                hasAlertedGeofence = false;
+            }
+        }
+
+        // --- FETCH ADDRESS PARA O PILL FLUTUANTE ---
+        function fetchAddressDOM(lat, lng) {
+            const el = document.getElementById('uiAddressPill');
+            if (!el) return;
+
+            el.innerHTML = '<i class="ph-fill ph-spinner ph-spin" style="color:var(--navy-dark)"></i> Buscando...';
+
+            // Debounce ou api call direta
+            const url = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`;
+
+            fetch(url, { headers: { 'User-Agent': 'RastreiaMais/1.0' } })
+                .then(r => r.json())
+                .then(d => {
+                    let addr = "Endereço não encontrado";
+                    if (d && d.address) {
+                        const road = d.address.road || '';
+                        const sub = d.address.suburb || d.address.city_district || '';
+                        const city = d.address.city || d.address.town || d.address.village || '';
+                        addr = `${road}, ${sub} - ${city}`;
+                        if (addr.startsWith(', ')) addr = addr.substring(2);
+                    }
+                    el.innerHTML = `<i class="ph-fill ph-map-pin" style="color:var(--gold)"></i> ${addr}`;
+                })
+                .catch(() => {
+                    el.innerHTML = '<i class="ph-fill ph-map-pin" style="color:#ef4444"></i> Indisponível';
+                });
+        }
+
+        // --- CHECK BLOCKER ---
+        function checkBlocker(vData) {
+            const row = document.getElementById('commandSection');
+            if (!row) return;
+            // Se o veículo tiver flag 'bloqueio' ou se assumirmos que todos têm:
+            // O usuário disse: "se os botoes aparecem, está liberado".
+            // Vamos considerar que sempre aparece se tiver IMEI, ou checar flag.
+            // Por enquanto, mostramos sempre que tiver trackerId/IMEI valido.
+            if (vData && (vData.trackerId || vData.imei)) {
+                row.style.display = 'flex';
+            } else {
+                row.style.display = 'none';
+            }
+        }
+
+        // --- FETCH ADDRESS GENÉRICO (RETORNA TEXTO) ---
+        async function getAddressText(lat, lng) {
+            try {
+                await new Promise(r => setTimeout(r, 600));
+                const r = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`, { headers: { 'User-Agent': 'RastreioApp/1.0' } });
+                const d = await r.json();
+                if (d.address) {
+                    let addr = d.address.road || d.address.pedestrian || 'Rua desconhecida';
+                    if (d.address.house_number) addr += `, ${d.address.house_number}`;
+                    if (d.address.suburb) addr += ` - ${d.address.suburb}`;
+                    else if (d.address.city_district) addr += ` - ${d.address.city_district}`;
+                    return addr;
+                }
+                return "Endereço não encontrado";
+            } catch (e) { return "Erro no endereço"; }
+        }
+
+        // --- COMANDOS DE BLOQUEIO ---
+        window.confirmCommand = async (type) => {
+            if (!activeImei) { showToast("Erro: IMEI não identificado."); return; }
+
+            const actionName = type === 'block' ? "BLOQUEAR" : "DESBLOQUEAR";
+
+            if (type === 'block') {
+                const safetyMsg = "⚠️ PERIGO: LEIA COM ATENÇÃO ⚠️\n\n" +
+                    "O envio do bloqueio desligará o motor do veículo.\n" +
+                    "1. NÃO bloqueie se o veículo estiver em alta velocidade.\n" +
+                    "2. O bloqueio repentino pode causar acidentes graves.\n" +
+                    "3. Certifique-se que é seguro realizar esta ação.\n\n" +
+                    "Confirma o BLOQUEIO imediato do veículo?";
+                if (!confirm(safetyMsg)) return;
+            } else {
+                if (!confirm(`Deseja realmente ${actionName} o veículo?`)) return;
+            }
+
+            // Feedback visual no botão
+            const btnId = type === 'block' ? '.cmd-block' : '.cmd-unblock';
+            const btn = document.querySelector(btnId);
+            const originalText = btn ? btn.innerHTML : '';
+            if (btn) btn.innerHTML = '<i class="ph-bold ph-spinner ph-spin"></i> ENVIANDO...';
+
+            showToast("Enviando comando...");
+
+            try {
+                await addDoc(collection(db, "tenants", "UNIK", "commands"), {
+                    imei: activeImei,
+                    commandType: type,
+                    status: 'pending',
+                    requestTime: Timestamp.now(),
+                    origin: 'web_app',
+                    user: auth.currentUser ? auth.currentUser.email : 'anonymous'
+                });
+
+                showToast(`Comando de ${actionName} enviado com sucesso!`);
+                // Reset botão após 3s
+                setTimeout(() => { if (btn) btn.innerHTML = originalText; }, 3000);
+
+            } catch (error) {
+                console.error(error);
+                showToast("Erro ao gravar comando no sistema.");
+                if (btn) btn.innerHTML = originalText;
+            }
+        };
+
+        // --- HISTÓRICO & PDF ---
+        window.toggleHistory = () => {
+            document.getElementById('historyDrawer').classList.toggle('active');
+            if (!document.getElementById('histStart').value) {
+                const now = new Date();
+                const todayStart = new Date(now.setHours(0, 0, 0, 0));
+                const todayEnd = new Date(now.setHours(23, 59, 59, 999));
+                const toLocalISO = (d) => { const z = d.getTimezoneOffset() * 60000; return new Date(d - z).toISOString().slice(0, 16); };
+                document.getElementById('histStart').value = toLocalISO(todayStart);
+                document.getElementById('histEnd').value = toLocalISO(todayEnd);
+            }
+        };
+
+        window.fetchHistory = async () => {
+            if (!selectedVehicleId || !vehicleDataCache[selectedVehicleId] || !vehicleDataCache[selectedVehicleId].trackerId) {
+                showToast("Selecione um veículo com rastreador.");
+                return;
+            }
+            const activeTrackerId = vehicleDataCache[selectedVehicleId].trackerId;
+
+            const startVal = new Date(document.getElementById('histStart').value);
+            const endVal = new Date(document.getElementById('histEnd').value);
+
+            showToast("Buscando histórico...");
+
+            try {
+                const histRef = collection(db, "tenants", "UNIK", "trackers", activeTrackerId, "history");
+                const q = query(
+                    histRef,
+                    where("timestamp", ">=", Timestamp.fromDate(startVal)),
+                    where("timestamp", "<=", Timestamp.fromDate(endVal)),
+                    orderBy("timestamp", "asc")
+                );
+
+                const snap = await getDocs(q);
+                if (snap.empty) {
+                    showToast("Nenhum dado encontrado no período.");
+                    historyDataCache = [];
+                    return;
+                }
+
+                historyDataCache = [];
+                const latLngs = [];
+
+                snap.forEach(d => {
+                    const h = d.data();
+                    if (h.lat && h.lng) {
+                        latLngs.push([h.lat, h.lng]);
+                        historyDataCache.push({
+                            timeStr: h.timestamp.toDate().toLocaleString('pt-BR'),
+                            rawDate: h.timestamp.toDate(),
+                            speed: h.speed || 0,
+                            ignition: h.ignition, // booleano
+                            lat: h.lat,
+                            lng: h.lng
+                        });
+                    }
+                });
+
+                if (routePolyline) map.removeLayer(routePolyline);
+
+                if (latLngs.length > 0) {
+                    routePolyline = L.polyline(latLngs, { color: 'var(--blue-bright)', weight: 4 }).addTo(map);
+                    map.fitBounds(routePolyline.getBounds());
+                    document.getElementById('histStats').innerText = `${latLngs.length} pontos encontrados.`;
+                    if (window.innerWidth < 600) document.getElementById('historyDrawer').classList.remove('active');
+                }
+
+            } catch (err) {
+                console.error(err);
+                showToast("Erro ao buscar histórico.");
+            }
+        };
+
+        // --- ALGORITMO DE VIAGENS PARA O PDF ---
+        window.generatePDF = async () => {
+            if (historyDataCache.length === 0) {
+                showToast("Busque uma rota primeiro.");
+                return;
+            }
+
+            showToast("Processando itinerários e endereços... (Aguarde)");
+
+            // 1. Agrupar pontos em "Viagens" (Baseado em Ignição LIGADA)
+            const trips = [];
+            let currentTrip = null;
+
+            for (let i = 0; i < historyDataCache.length; i++) {
+                const p = historyDataCache[i];
+                const isIgnitionOn = p.ignition === true || p.speed > 5; // Fallback se ignição falhar
+
+                if (isIgnitionOn) {
+                    if (!currentTrip) {
+                        // Começa nova viagem
+                        currentTrip = {
+                            start: p,
+                            end: p,
+                            distance: 0,
+                            points: [p]
+                        };
+                    } else {
+                        // Continua viagem
+                        // Calcula distancia do ponto anterior
+                        const prev = currentTrip.points[currentTrip.points.length - 1];
+                        const dist = calcDist(prev.lat, prev.lng, p.lat, p.lng);
+                        currentTrip.distance += dist;
+                        currentTrip.end = p;
+                        currentTrip.points.push(p);
+                    }
+                } else {
+                    // Ignição OFF
+                    if (currentTrip) {
+                        // Fecha viagem se tiver mais de 100m ou 2 min (filtro de ruído)
+                        if (currentTrip.distance > 0.1 || (currentTrip.end.rawDate - currentTrip.start.rawDate) > 120000) {
+                            trips.push(currentTrip);
+                        }
+                        currentTrip = null;
+                    }
+                }
+            }
+            // Adiciona ultima viagem se ficou aberta
+            if (currentTrip) trips.push(currentTrip);
+
+            // Se não detectou viagens (ex: carro parado), avisa ou cria 1 entrada
+            if (trips.length === 0 && historyDataCache.length > 0) {
+                trips.push({
+                    start: historyDataCache[0],
+                    end: historyDataCache[historyDataCache.length - 1],
+                    distance: 0,
+                    points: historyDataCache
+                });
+            }
+
+            // 2. Buscar Endereços (Async)
+            const tableRows = [];
+
+            for (const trip of trips) {
+                const startAddr = await getAddressText(trip.start.lat, trip.start.lng);
+                const endAddr = await getAddressText(trip.end.lat, trip.end.lng);
+
+                const startTime = trip.start.timeStr.split(' ')[1].substring(0, 5); // Só Hora:Min
+                const endTime = trip.end.timeStr.split(' ')[1].substring(0, 5);
+                const startDate = trip.start.timeStr.split(' ')[0];
+
+                const durationMs = trip.end.rawDate - trip.start.rawDate;
+                const durationMin = Math.floor(durationMs / 60000);
+
+                tableRows.push([
+                    startDate,
+                    startTime,
+                    startAddr,
+                    endTime,
+                    endAddr,
+                    `${trip.distance.toFixed(1)} km`,
+                    `${durationMin} min`
+                ]);
+            }
+
+            // 3. Gerar PDF
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF({ orientation: 'landscape' }); // Paisagem para caber endereços
+
+            doc.setFontSize(16);
+            doc.text(`Relatório de Itinerários - ${currentVehicleData.plate || 'Veículo'}`, 14, 20);
+
+            doc.setFontSize(10);
+            doc.text(`Período: ${document.getElementById('histStart').value.replace('T', ' ')} até ${document.getElementById('histEnd').value.replace('T', ' ')}`, 14, 28);
+
+            doc.autoTable({
+                head: [["Data", "Início", "Endereço Saída", "Fim", "Endereço Chegada", "Dist.", "Duração"]],
+                body: tableRows,
+                startY: 35,
+                styles: { fontSize: 8 },
+                columnStyles: {
+                    2: { cellWidth: 80 }, // Endereço Saída maior
+                    4: { cellWidth: 80 }  // Endereço Chegada maior
+                }
+            });
+
+            doc.save(`Itinerarios_${currentVehicleData.plate || 'Veiculo'}.pdf`);
+            showToast("PDF Gerado com Sucesso!");
+        };
+
+        // Helper Distancia (Haversine)
+        function calcDist(lat1, lon1, lat2, lon2) {
+            const R = 6371; // km
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLon = (lon2 - lon1) * Math.PI / 180;
+            const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                Math.sin(dLon / 2) * Math.sin(dLon / 2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+            return R * c;
+        }
+
+        // Helpers UI
+        function showToast(msg) {
+            const t = document.getElementById('toast');
+            t.innerText = msg; t.style.display = 'block';
+            setTimeout(() => t.style.display = 'none', 3000);
+        }
+        function dismissLoading() {
+            const l = document.getElementById('loading');
+            if (l) { l.style.opacity = '0'; setTimeout(() => l.style.display = 'none', 500); }
+        }
+
+        window.toggleLayer = () => {
+            if (map.hasLayer(satLayer)) { map.removeLayer(satLayer); streetLayer.addTo(map); }
+            else { map.removeLayer(streetLayer); satLayer.addTo(map); }
+        };
+
+    </script>
+
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('./service-worker.js')
+                .then(() => console.log('Service Worker registrado com sucesso!'))
+                .catch((error) => console.log('Falha ao registrar SW:', error));
+        }
+    </script>
+</body>
+
+</html>

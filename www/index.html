@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <link rel="manifest" href="manifest.json">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Unik Rastreia">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#0f172a"> <title>Minha Proteção</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+
+    <style>
+        :root {
+            /* Identidade Visual Premium (Cliente Final) */
+            --navy-dark: #0f172a;       
+            --navy-light: #1e293b;
+            --gold: #D4AF37;            
+            --gold-hover: #b5952f;
+            --gold-light: #fcfbf5;      
+            
+            --bg-page: #f1f5f9;
+            --white: #ffffff;
+            --text-main: #334155;
+            --text-light: #94a3b8;
+            --error: #ef4444;
+        }
+
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(180deg, var(--navy-dark) 0%, #1e293b 40%, #f1f5f9 40%, #f1f5f9 100%);
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center; /* Centraliza verticalmente */
+            align-items: center;
+            min-height: 100vh;
+            padding: 24px;
+            overflow: hidden;
+        }
+
+        /* Área de Boas-vindas (Topo Escuro) */
+        .welcome-header {
+            position: absolute;
+            top: 6%;
+            text-align: center;
+            color: white;
+            width: 100%;
+            padding: 0 20px;
+        }
+        
+        .welcome-header h2 {
+            font-family: 'Poppins', sans-serif;
+            margin: 0;
+            font-weight: 600;
+            font-size: 20px;
+            color: var(--gold);
+        }
+        
+        .welcome-header p {
+            margin: 5px 0 0 0;
+            font-size: 13px;
+            opacity: 0.8;
+        }
+
+        /* Cartão de Login */
+        .login-card {
+            width: 100%;
+            max-width: 360px;
+            background: var(--white);
+            padding: 40px 28px;
+            border-radius: 24px;
+            box-shadow: 0 20px 40px -10px rgba(15, 23, 42, 0.15);
+            text-align: center;
+            position: relative;
+            z-index: 10;
+            margin-top: 40px; /* Espaço para o header */
+            
+            opacity: 0;
+            transform: translateY(20px);
+            animation: slideUpFade 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+        }
+
+        @keyframes slideUpFade {
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Ícone de Carro (Foco no produto) */
+        .brand-logo {
+            width: 80px;
+            height: 80px;
+            background: var(--white);
+            color: var(--navy-dark);
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            margin-top: -80px; /* Sobe o ícone para fora do card */
+            margin-bottom: 20px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            border: 4px solid var(--gold);
+        }
+
+        h1 {
+            font-family: 'Poppins', sans-serif;
+            color: var(--navy-dark);
+            margin: 0 0 4px 0;
+            font-size: 22px;
+            font-weight: 700;
+        }
+
+        p.subtitle {
+            color: var(--text-light);
+            margin: 0 0 32px 0;
+            font-size: 14px;
+        }
+
+        /* Formulário */
+        .form-group {
+            margin-bottom: 18px;
+            text-align: left;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--navy-dark);
+            margin-bottom: 6px;
+            margin-left: 4px;
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+
+        .input-wrapper i {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-light);
+            font-size: 20px;
+            transition: color 0.3s;
+        }
+
+        input {
+            width: 100%;
+            padding: 16px 16px 16px 48px;
+            border: 2px solid #e2e8f0;
+            border-radius: 14px;
+            font-size: 15px;
+            font-family: 'Inter', sans-serif;
+            outline: none;
+            background: #fff;
+            color: var(--navy-dark);
+            transition: all 0.3s;
+        }
+
+        input:focus {
+            border-color: var(--gold);
+            background-color: var(--gold-light);
+        }
+
+        input:focus + i { color: var(--gold); }
+
+        /* Botão Principal */
+        .btn-primary {
+            background: linear-gradient(135deg, var(--navy-dark) 0%, #2e3b55 100%);
+            color: var(--white);
+            border: none;
+            width: 100%;
+            padding: 18px;
+            border-radius: 14px;
+            font-size: 15px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 10px;
+            box-shadow: 0 8px 20px -5px rgba(15, 23, 42, 0.4);
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Detalhe Dourado no Botão */
+        .btn-primary::after {
+            content: '';
+            position: absolute;
+            bottom: 0; left: 0; width: 100%; height: 3px;
+            background: var(--gold);
+        }
+
+        .btn-primary:active { transform: scale(0.98); }
+
+        /* Links */
+        .help-links {
+            margin-top: 24px;
+            display: flex;
+            justify-content: space-between;
+            padding: 0 5px;
+        }
+
+        .help-links a {
+            color: var(--text-light);
+            text-decoration: none;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .help-links a.highlight { color: var(--navy-dark); font-weight: 600; }
+
+        /* Footer */
+        .footer {
+            position: fixed;
+            bottom: 20px;
+            text-align: center;
+        }
+        .footer span {
+            display: block;
+            font-size: 10px;
+            color: var(--text-light);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* Toast de Erro */
+        .error-toast {
+            background-color: #FEF2F2;
+            color: var(--error);
+            padding: 10px 14px;
+            border-radius: 10px;
+            font-size: 12px;
+            margin-bottom: 20px;
+            display: none;
+            align-items: center;
+            gap: 8px;
+            border: 1px solid #fee2e2;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="welcome-header">
+        <h2>Área do Associado</h2>
+        <p>Segurança e tranquilidade para você.</p>
+    </div>
+
+    <div class="login-card">
+        <div class="brand-logo">
+            <i class="ph-fill ph-car-profile"></i>
+        </div>
+
+        <h1>Bem-vindo(a)</h1>
+        <p class="subtitle">Faça login para localizar seu veículo.</p>
+
+        <div id="errorDisplay" class="error-toast">
+            <i class="ph-bold ph-warning-circle"></i>
+            <span id="errorText">Dados incorretos.</span>
+        </div>
+
+        <form id="loginForm">
+            <div class="form-group">
+                <label for="email">E-MAIL OU USUÁRIO</label>
+                <div class="input-wrapper">
+                    <i class="ph ph-user"></i>
+                    <input type="email" id="email" placeholder="Digite seu acesso" required>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="password">SUA SENHA</label>
+                <div class="input-wrapper">
+                    <i class="ph ph-lock-key"></i>
+                    <input type="password" id="password" placeholder="••••••••" required>
+                </div>
+            </div>
+
+            <button type="submit" class="btn-primary" id="btnLogin">
+                Rastrear Agora
+            </button>
+        </form>
+
+        <div class="help-links">
+            <a href="#">Esqueci minha senha</a>
+            <a href="#" class="highlight">Preciso de ajuda</a>
+        </div>
+    </div>
+
+    <div class="footer">
+        <span>Monitoramento 24h</span>
+    </div>
+
+    <script type="module">
+        import { auth } from './js/config.js';
+        import { signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+
+        const form = document.getElementById('loginForm');
+        const btnLogin = document.getElementById('btnLogin');
+        const errorDisplay = document.getElementById('errorDisplay');
+        const errorText = document.getElementById('errorText');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            // Animação do botão
+            const originalText = btnLogin.innerHTML;
+            btnLogin.innerHTML = '<i class="ph ph-spinner-gap ph-spin"></i> Acessando...';
+            btnLogin.disabled = true;
+            errorDisplay.style.display = 'none';
+
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            try {
+                // Login Real
+                await signInWithEmailAndPassword(auth, email, password);
+                
+                // Sucesso
+                btnLogin.style.background = '#10b981'; 
+                btnLogin.innerHTML = 'Sucesso! Redirecionando...';
+                
+                setTimeout(() => {
+                    window.location.href = 'home.html'; 
+                }, 800);
+
+            } catch (error) {
+                console.error("Erro Login:", error);
+                
+                // Tratamento de Erros
+                let msg = "Erro ao fazer login.";
+                if(error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
+                    msg = "E-mail ou senha incorretos.";
+                } else if(error.code === 'auth/too-many-requests') {
+                    msg = "Muitas tentativas. Tente mais tarde.";
+                }
+
+                errorText.innerText = msg;
+                errorDisplay.style.display = 'flex';
+                
+                btnLogin.innerHTML = originalText;
+                btnLogin.disabled = false;
+                btnLogin.style.background = ''; // Reseta cor
+            }
+        });
+    </script>
+
+    <script>
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('./service-worker.js')
+            .then(() => console.log('Service Worker registrado com sucesso!'))
+            .catch((error) => console.log('Falha ao registrar SW:', error));
+    }
+</script>
+</body>
+</html>

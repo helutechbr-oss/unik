@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <link rel="manifest" href="manifest.json">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#0f172a">
+    <title>Minhas Faturas</title>
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@500;600;700&display=swap"
+        rel="stylesheet">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+
+    <style>
+        :root {
+            --navy-dark: #0f172a;
+            --navy-light: #1e293b;
+            --gold: #D4AF37;
+            --gold-light: #FBF6E0;
+            --white: #ffffff;
+            --gray-bg: #f8fafc;
+            --text-dark: #334155;
+            --text-gray: #64748b;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+        }
+
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--gray-bg);
+            margin: 0;
+            padding-bottom: 90px;
+        }
+
+        /* --- HEADER --- */
+        .header {
+            background: var(--navy-dark);
+            color: white;
+            padding: 20px 24px 80px 24px;
+            border-radius: 0 0 32px 32px;
+            position: relative;
+        }
+
+        .header-top {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+
+        .btn-back {
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            cursor: pointer;
+        }
+
+        .page-title {
+            font-family: 'Poppins', sans-serif;
+            font-size: 18px;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        /* --- CARD DESTAQUE (PRÓXIMA FATURA) --- */
+        .highlight-card {
+            background: white;
+            margin: -60px 20px 20px 20px;
+            border-radius: 20px;
+            padding: 24px;
+            box-shadow: 0 10px 30px -10px rgba(15, 23, 42, 0.15);
+            position: relative;
+            z-index: 10;
+            border-top: 4px solid var(--gold);
+        }
+
+        .bill-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 16px;
+        }
+
+        .bill-month {
+            font-size: 14px;
+            color: var(--text-gray);
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .bill-status {
+            background: #eff6ff;
+            color: #1d4ed8;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .bill-value {
+            font-family: 'Poppins', sans-serif;
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--navy-dark);
+            margin: 0 0 4px 0;
+        }
+
+        .bill-due {
+            color: var(--text-dark);
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+
+        .bill-due span {
+            color: var(--danger);
+            font-weight: 600;
+        }
+
+        .action-row {
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn-pay {
+            flex: 2;
+            background: var(--navy-dark);
+            color: white;
+            border: none;
+            padding: 14px;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            cursor: pointer;
+        }
+
+        .btn-pdf {
+            flex: 1;
+            background: white;
+            border: 1px solid #e2e8f0;
+            color: var(--text-dark);
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            cursor: pointer;
+        }
+
+        /* --- LISTA HISTÓRICO --- */
+        .history-section {
+            padding: 0 24px;
+        }
+
+        .section-label {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--navy-dark);
+            margin-bottom: 16px;
+            display: block;
+        }
+
+        .bill-item {
+            background: white;
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border: 1px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .bill-item:active {
+            transform: scale(0.98);
+            background: #f8fafc;
+        }
+
+        .bill-icon {
+            width: 44px;
+            height: 44px;
+            background: #f1f5f9;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            color: var(--text-gray);
+            margin-right: 16px;
+        }
+
+        .bill-icon.paid {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .bill-icon.late {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .bill-details {
+            flex: 1;
+        }
+
+        .bill-details h4 {
+            margin: 0;
+            font-family: 'Poppins', sans-serif;
+            font-size: 15px;
+            color: var(--navy-dark);
+        }
+
+        .bill-details p {
+            margin: 4px 0 0 0;
+            font-size: 12px;
+            color: var(--text-gray);
+        }
+
+        .bill-amount-mini {
+            font-weight: 700;
+            font-size: 14px;
+            color: var(--navy-dark);
+            text-align: right;
+        }
+
+        .status-mini {
+            font-size: 10px;
+            display: block;
+            margin-top: 4px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .text-paid {
+            color: var(--success);
+        }
+
+        .text-late {
+            color: var(--danger);
+        }
+
+        /* --- TAB BAR --- */
+        .tab-bar {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            background: white;
+            display: flex;
+            justify-content: space-around;
+            padding: 12px 0;
+            border-top: 1px solid #e2e8f0;
+            z-index: 100;
+        }
+
+        .tab-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            color: var(--text-gray);
+            text-decoration: none;
+            font-size: 10px;
+            font-weight: 500;
+            width: 60px;
+        }
+
+        .tab-item i {
+            font-size: 24px;
+        }
+
+        .tab-item.active {
+            color: var(--navy-dark);
+        }
+
+        .tab-center {
+            background: var(--navy-dark);
+            color: var(--gold);
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: -30px;
+            box-shadow: 0 8px 20px rgba(15, 23, 42, 0.4);
+            border: 4px solid var(--gray-bg);
+        }
+
+        .tab-center i {
+            font-size: 24px;
+        }
+
+        /* --- TOAST --- */
+        .toast {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #10b981;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 30px;
+            font-size: 13px;
+            font-weight: 600;
+            box-shadow: 0 5px 15px rgba(16, 185, 129, 0.4);
+            display: none;
+            align-items: center;
+            gap: 8px;
+            z-index: 5000;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div
+        style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 80vh; padding: 20px; text-align: center;">
+        <i class="ph-duotone ph-wrench" style="font-size: 64px; color: #cbd5e1; margin-bottom: 20px;"></i>
+        <h2 style="margin: 0; color: var(--navy-dark);">Em Manutenção</h2>
+        <p style="color: var(--text-gray); margin-top: 10px;">Estamos melhorando o módulo financeiro para você.<br>Volte
+            em breve!</p>
+        <button onclick="window.location.href='home.html'"
+            style="background: var(--navy-dark); color: white; border: none; padding: 12px 24px; border-radius: 8px; font-weight: 600; margin-top: 20px; cursor: pointer;">Voltar
+            ao Início</button>
+    </div>
+
+    <!-- Conteúdo Antigo Removido/Oculto -->
+
+    <nav class="tab-bar">
+        <a href="home.html" class="tab-item"><i class="ph ph-house"></i><span>Início</span></a>
+        <a href="#" class="tab-item active" style="opacity: 0.5;"
+            onclick="alert('Página em manutenção!'); return false;"><i class="ph-fill ph-lock-key"></i><span>Em
+                Breve</span></a>
+
+        <a href="mapa.html" class="tab-item">
+            <div class="tab-center"><i class="ph-fill ph-crosshair"></i></div>
+        </a>
+
+        <a href="#" class="tab-item" style="opacity: 0.5;" onclick="alert('Página em manutenção!'); return false;"><i
+                class="ph-fill ph-lock-key"></i><span>Em Breve</span></a>
+        <a href="perfil.html" class="tab-item"><i class="ph ph-user"></i><span>Perfil</span></a>
+    </nav>
+
+    <script>
+        function copyCode() {
+            // Simula cópia para a área de transferência
+            const dummyCode = "00020126580014BR.GOV.BCB.PIX0136123e4567-e89b-12d3-a456-426614174000520400005303986540510.005802BR5913Associacao ABC6008Sao Paulo62070503***6304E2CA";
+
+            navigator.clipboard.writeText(dummyCode).then(() => {
+                showToast();
+            }).catch(() => {
+                // Fallback se o navegador bloquear
+                showToast();
+            });
+        }
+
+        function showToast() {
+            const toast = document.getElementById('toast');
+            toast.style.display = 'flex';
+            setTimeout(() => {
+                toast.style.display = 'none';
+            }, 3000);
+        }
+    </script>
+
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('./service-worker.js')
+                .then(() => console.log('Service Worker registrado com sucesso!'))
+                .catch((error) => console.log('Falha ao registrar SW:', error));
+        }
+    </script>
+</body>
+
+
+</html>

@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <link rel="manifest" href="manifest.json">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#0f172a">
+    <title>Clube de Vantagens</title>
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@500;600;700&display=swap"
+        rel="stylesheet">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+
+    <style>
+        :root {
+            --navy-dark: #0f172a;
+            --navy-light: #1e293b;
+            --gold: #D4AF37;
+            --gold-light: #FBF6E0;
+            --white: #ffffff;
+            --gray-bg: #f8fafc;
+            --text-dark: #334155;
+            --text-gray: #64748b;
+            --success: #10b981;
+            --danger: #ef4444;
+        }
+
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--gray-bg);
+            margin: 0;
+            padding-bottom: 90px;
+            overflow-x: hidden;
+        }
+
+        /* --- HEADER --- */
+        .header {
+            background: var(--navy-dark);
+            color: white;
+            padding: 24px 24px 40px 24px;
+            border-radius: 0 0 32px 32px;
+            position: relative;
+        }
+
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .page-title {
+            font-family: 'Poppins', sans-serif;
+            font-size: 20px;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .economy-pill {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .economy-pill i {
+            color: var(--gold);
+            font-size: 14px;
+        }
+
+        /* Barra de Busca */
+        .search-box {
+            background: white;
+            border-radius: 12px;
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .search-box input {
+            border: none;
+            outline: none;
+            width: 100%;
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+        }
+
+        .search-box i {
+            color: var(--text-gray);
+            font-size: 18px;
+        }
+
+        /* --- CATEGORIAS --- */
+        .categories-scroll {
+            display: flex;
+            overflow-x: auto;
+            gap: 12px;
+            padding: 20px 20px 10px 20px;
+            scrollbar-width: none;
+            margin-top: -10px;
+        }
+
+        .categories-scroll::-webkit-scrollbar {
+            display: none;
+        }
+
+        .cat-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            min-width: 70px;
+            cursor: pointer;
+        }
+
+        .cat-icon {
+            width: 56px;
+            height: 56px;
+            background: white;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: var(--navy-light);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            transition: transform 0.2s, background 0.2s;
+        }
+
+        .cat-item.active .cat-icon {
+            background: var(--gold);
+            color: var(--navy-dark);
+            transform: translateY(-3px);
+        }
+
+        .cat-label {
+            font-size: 11px;
+            font-weight: 500;
+            color: var(--text-gray);
+        }
+
+        /* --- DESTAQUES (Banners) --- */
+        .section-title {
+            padding: 0 20px;
+            margin: 20px 0 12px 0;
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--navy-dark);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .see-all {
+            font-size: 12px;
+            color: var(--gold);
+            font-weight: 600;
+            text-decoration: none;
+        }
+
+        .featured-scroll {
+            display: flex;
+            overflow-x: auto;
+            gap: 16px;
+            padding: 0 20px 20px 20px;
+            scrollbar-width: none;
+        }
+
+        .featured-scroll::-webkit-scrollbar {
+            display: none;
+        }
+
+        .promo-banner {
+            min-width: 280px;
+            height: 140px;
+            border-radius: 16px;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            padding: 16px;
+            color: white;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            cursor: pointer;
+        }
+
+        .bg-gas {
+            background: linear-gradient(135deg, #FF9800 0%, #F57C00 100%);
+        }
+
+        .bg-med {
+            background: linear-gradient(135deg, #009688 0%, #00796B 100%);
+        }
+
+        .promo-badge {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            background: white;
+            color: var(--navy-dark);
+            font-size: 10px;
+            font-weight: 700;
+            padding: 4px 8px;
+            border-radius: 4px;
+            text-transform: uppercase;
+        }
+
+        .promo-logo {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            width: 32px;
+            height: 32px;
+            background: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            color: #333;
+            font-size: 10px;
+        }
+
+        .promo-info h3 {
+            margin: 0;
+            font-size: 16px;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        .promo-info p {
+            margin: 2px 0 0 0;
+            font-size: 12px;
+            opacity: 0.9;
+        }
+
+        /* --- LISTA DE PARCEIROS --- */
+        .partners-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            padding: 0 20px;
+        }
+
+        .partner-card {
+            background: white;
+            border-radius: 16px;
+            padding: 16px;
+            position: relative;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            gap: 8px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .partner-card:active {
+            transform: scale(0.98);
+        }
+
+        .p-logo {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            background: #f1f5f9;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            color: var(--text-gray);
+        }
+
+        .p-discount {
+            color: var(--success);
+            font-weight: 700;
+            font-size: 14px;
+            background: #ecfdf5;
+            padding: 4px 8px;
+            border-radius: 6px;
+            width: 100%;
+        }
+
+        .p-name {
+            font-weight: 600;
+            font-size: 13px;
+            color: var(--text-dark);
+            margin: 0;
+        }
+
+        .p-cat {
+            font-size: 10px;
+            color: var(--text-gray);
+        }
+
+        /* --- MODAL DE CUPOM --- */
+        .coupon-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 2000;
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(4px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .coupon-overlay.active {
+            display: flex;
+            opacity: 1;
+        }
+
+        .coupon-ticket {
+            background: white;
+            width: 100%;
+            max-width: 320px;
+            border-radius: 20px;
+            position: relative;
+            overflow: hidden;
+            text-align: center;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+            transform: scale(0.9);
+            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .coupon-overlay.active .coupon-ticket {
+            transform: scale(1);
+        }
+
+        .ticket-header {
+            background: var(--navy-dark);
+            color: white;
+            padding: 24px;
+            border-bottom: 2px dashed rgba(255, 255, 255, 0.3);
+            position: relative;
+        }
+
+        /* Efeito de "picote" do ticket */
+        .ticket-header::after,
+        .ticket-header::before {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            width: 20px;
+            height: 20px;
+            background: rgba(15, 23, 42, 0.85);
+            /* Mesma cor do overlay */
+            border-radius: 50%;
+        }
+
+        .ticket-header::after {
+            right: -10px;
+        }
+
+        .ticket-header::before {
+            left: -10px;
+        }
+
+        .store-logo-large {
+            width: 64px;
+            height: 64px;
+            background: white;
+            border-radius: 50%;
+            margin: 0 auto 12px auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--navy-dark);
+            font-size: 28px;
+            border: 4px solid var(--gold);
+        }
+
+        .ticket-body {
+            padding: 24px;
+        }
+
+        .coupon-code {
+            background: #f1f5f9;
+            border: 2px dashed #cbd5e1;
+            padding: 12px;
+            border-radius: 8px;
+            font-family: 'Inter', monospace;
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin: 16px 0;
+            letter-spacing: 2px;
+            position: relative;
+        }
+
+        .copy-hint {
+            font-size: 10px;
+            color: var(--success);
+            display: none;
+            position: absolute;
+            bottom: -20px;
+            width: 100%;
+            left: 0;
+        }
+
+        .btn-use {
+            background: var(--navy-dark);
+            color: var(--gold);
+            border: none;
+            padding: 14px;
+            width: 100%;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-close-ticket {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border: none;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        /* TAB BAR */
+        .tab-bar {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            background: white;
+            display: flex;
+            justify-content: space-around;
+            padding: 12px 0;
+            border-top: 1px solid #e2e8f0;
+            z-index: 100;
+        }
+
+        .tab-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            color: var(--text-gray);
+            text-decoration: none;
+            font-size: 10px;
+            font-weight: 500;
+            width: 60px;
+        }
+
+        .tab-item i {
+            font-size: 24px;
+        }
+
+        .tab-item.active {
+            color: var(--navy-dark);
+        }
+
+        .tab-center {
+            background: var(--navy-dark);
+            color: var(--gold);
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: -30px;
+            box-shadow: 0 8px 20px rgba(15, 23, 42, 0.4);
+            border: 4px solid var(--gray-bg);
+        }
+
+        .tab-center i {
+            font-size: 24px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div
+        style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 80vh; padding: 20px; text-align: center;">
+        <i class="ph-duotone ph-wrench" style="font-size: 64px; color: #cbd5e1; margin-bottom: 20px;"></i>
+        <h2 style="margin: 0; color: var(--navy-dark);">Em Manutenção</h2>
+        <p style="color: var(--text-gray); margin-top: 10px;">O Clube de Vantagens está sendo atualizado com novas
+            parcerias.<br>Volte em breve!</p>
+        <button onclick="window.location.href='home.html'"
+            style="background: var(--navy-dark); color: white; border: none; padding: 12px 24px; border-radius: 8px; font-weight: 600; margin-top: 20px; cursor: pointer;">Voltar
+            ao Início</button>
+    </div>
+
+    <!-- Conteúdo Antigo Removido/Oculto -->
+
+    <nav class="tab-bar">
+        <a href="home.html" class="tab-item"><i class="ph ph-house"></i><span>Início</span></a>
+        <a href="#" class="tab-item" style="opacity: 0.5;" onclick="alert('Página em manutenção!'); return false;"><i
+                class="ph-fill ph-lock-key"></i><span>Em Breve</span></a>
+        <a href="mapa.html" class="tab-item">
+            <div class="tab-center"><i class="ph-fill ph-crosshair"></i></div>
+        </a>
+        <a href="#" class="tab-item active" style="opacity: 0.5;"
+            onclick="alert('Página em manutenção!'); return false;"><i class="ph-fill ph-lock-key"></i><span>Em
+                Breve</span></a>
+        <a href="perfil.html" class="tab-item"><i class="ph ph-user"></i><span>Perfil</span></a>
+    </nav>
+
+    <script>
+        // Função para abrir o cupom com dados dinâmicos
+        function openCoupon(store, offer, desc, icon, code) {
+            document.getElementById('cpStore').innerText = store;
+            document.getElementById('cpOffer').innerText = offer;
+            document.getElementById('cpDesc').innerText = desc;
+            document.getElementById('cpCode').childNodes[0].nodeValue = code; // Muda só o texto, mantendo a div filha
+
+            // Ícone dinâmico
+            const iconEl = document.getElementById('cpIcon');
+            iconEl.className = `ph-fill ${icon}`;
+
+            const modal = document.getElementById('couponModal');
+            modal.style.display = 'flex';
+            setTimeout(() => modal.classList.add('active'), 10);
+        }
+
+        function closeCoupon() {
+            const modal = document.getElementById('couponModal');
+            modal.classList.remove('active');
+            setTimeout(() => modal.style.display = 'none', 300);
+        }
+
+        // Simula cópia
+        function copyCoupon() {
+            const code = document.getElementById('cpCode').childNodes[0].nodeValue.trim();
+            navigator.clipboard.writeText(code);
+
+            const hint = document.getElementById('copyHint');
+            hint.style.display = 'block';
+            setTimeout(() => hint.style.display = 'none', 2000);
+        }
+
+        // Filtro visual de categorias
+        function filterCat(el) {
+            // Remove active de todos
+            document.querySelectorAll('.cat-item').forEach(i => i.classList.remove('active'));
+            // Adiciona ao clicado
+            el.classList.add('active');
+            // Aqui entraria a lógica real de filtrar a lista
+        }
+    </script>
+
+
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('./service-worker.js')
+                .then(() => console.log('Service Worker registrado com sucesso!'))
+                .catch((error) => console.log('Falha ao registrar SW:', error));
+        }
+    </script>
+</body>
+
+</html>

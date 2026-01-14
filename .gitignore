@@ -1,6 +1,6 @@
 node_modules/
 dist/
-www/
+# www/ (Removido para permitir o upload dos arquivos do app)
 ios/App/public/
 ios/App/Pods/
 ios/App/.bundle/

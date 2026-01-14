@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <link rel="manifest" href="manifest.json">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Unik Rastreia">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#0f172a">
+    <title>Meu Perfil</title>
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@500;600;700&display=swap"
+        rel="stylesheet">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+
+    <style>
+        :root {
+            --navy-dark: #0f172a;
+            --navy-light: #1e293b;
+            --gold: #D4AF37;
+            --white: #ffffff;
+            --gray-bg: #f8fafc;
+            --text-dark: #334155;
+            --text-gray: #64748b;
+            --danger: #ef4444;
+            --border: #e2e8f0;
+        }
+
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--gray-bg);
+            margin: 0;
+            padding-bottom: 90px;
+            /* Espaço para TabBar */
+            overflow-x: hidden;
+        }
+
+        /* --- HEADER COM PERFIL --- */
+        .header {
+            background: var(--navy-dark);
+            color: white;
+            padding: 40px 24px 80px 24px;
+            border-radius: 0 0 32px 32px;
+            text-align: center;
+            position: relative;
+        }
+
+        .profile-avatar-container {
+            position: relative;
+            width: 100px;
+            height: 100px;
+            margin: 0 auto 16px auto;
+        }
+
+        .profile-avatar {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: white;
+            padding: 3px;
+            /* Borda branca */
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        }
+
+        .profile-avatar img {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid var(--gold);
+            /* Borda dourada interna */
+        }
+
+        .badge-edit {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            background: var(--gold);
+            color: var(--navy-dark);
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 3px solid var(--navy-dark);
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .user-name {
+            font-family: 'Poppins', sans-serif;
+            font-size: 22px;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .user-status {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            margin-top: 8px;
+            border: 1px solid var(--gold);
+            color: var(--gold);
+        }
+
+        /* --- CARTÕES DE CONTEÚDO --- */
+        .content-wrapper {
+            padding: 0 20px;
+            margin-top: -50px;
+            /* Sobe por cima do header */
+        }
+
+        .section-card {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            margin-bottom: 20px;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        .section-title {
+            font-weight: 600;
+            color: var(--navy-dark);
+            font-size: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .section-title i {
+            color: var(--gold);
+            font-size: 18px;
+        }
+
+        /* Dados do Usuário */
+        .data-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            font-size: 13px;
+        }
+
+        .data-label {
+            color: var(--text-gray);
+        }
+
+        .data-value {
+            color: var(--text-dark);
+            font-weight: 500;
+        }
+
+        /* Lista de Menu */
+        .menu-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .menu-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 0;
+            border-bottom: 1px solid #f1f5f9;
+            cursor: pointer;
+        }
+
+        .menu-item:last-child {
+            border-bottom: none;
+        }
+
+        .menu-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 14px;
+            color: var(--text-dark);
+            font-weight: 500;
+        }
+
+        .menu-icon-box {
+            width: 36px;
+            height: 36px;
+            background: #f8fafc;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--navy-light);
+            font-size: 18px;
+        }
+
+        .menu-right {
+            color: #cbd5e1;
+            font-size: 18px;
+        }
+
+        /* Toggle Switch */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 44px;
+            height: 24px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #cbd5e1;
+            transition: .4s;
+            border-radius: 24px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked+.slider {
+            background-color: var(--success);
+        }
+
+        input:checked+.slider:before {
+            transform: translateX(20px);
+        }
+
+        /* Botão Sair */
+        .btn-logout {
+            width: 100%;
+            padding: 16px;
+            border: 1px solid #fee2e2;
+            background: #fff1f2;
+            color: var(--danger);
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .btn-logout:active {
+            background: #ffe4e6;
+        }
+
+        /* Veículos Miniatura */
+        .mini-vehicle {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px;
+            background: #f8fafc;
+            border-radius: 10px;
+            margin-bottom: 8px;
+        }
+
+        .mini-icon {
+            width: 40px;
+            height: 40px;
+            background: white;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--navy-dark);
+            border: 1px solid #e2e8f0;
+        }
+
+        .mini-info h4 {
+            margin: 0;
+            font-size: 13px;
+            color: var(--text-dark);
+        }
+
+        .mini-info p {
+            margin: 0;
+            font-size: 11px;
+            color: var(--text-gray);
+        }
+
+        /* TAB BAR */
+        .tab-bar {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            background: white;
+            display: flex;
+            justify-content: space-around;
+            padding: 12px 0;
+            border-top: 1px solid #e2e8f0;
+            z-index: 100;
+        }
+
+        .tab-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            color: var(--text-gray);
+            text-decoration: none;
+            font-size: 10px;
+            font-weight: 500;
+            width: 60px;
+        }
+
+        .tab-item i {
+            font-size: 24px;
+        }
+
+        .tab-item.active {
+            color: var(--navy-dark);
+        }
+
+        .tab-center {
+            background: var(--navy-dark);
+            color: var(--gold);
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: -30px;
+            box-shadow: 0 8px 20px rgba(15, 23, 42, 0.4);
+            border: 4px solid var(--gray-bg);
+        }
+
+        .tab-center i {
+            font-size: 24px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <header class="header">
+        <div class="profile-avatar-container">
+            <div class="profile-avatar">
+                <img src="https://ui-avatars.com/api/?name=User&background=0f172a&color=D4AF37&size=200"
+                    alt="Foto Perfil" id="profileImg">
+            </div>
+            <div class="badge-edit" onclick="alert('Alterar foto...')">
+                <i class="ph-bold ph-pencil-simple"></i>
+            </div>
+        </div>
+        <h2 class="user-name">Carregando...</h2>
+        <span class="user-status"><i class="ph-fill ph-star"></i> Associado Ouro</span>
+    </header>
+
+    <div class="content-wrapper">
+
+        <div class="section-card">
+            <div class="section-header">
+                <span class="section-title"><i class="ph ph-user-circle"></i> Meus Dados</span>
+                <span style="font-size: 12px; color: var(--gold); cursor: pointer;"
+                    onclick="alert('Solicite alteração no suporte.')">Editar</span>
+            </div>
+            <div class="data-row">
+                <span class="data-label">E-mail</span>
+                <span class="data-value">...</span>
+            </div>
+            <div class="data-row">
+                <span class="data-label">CPF</span>
+                <span class="data-value">...</span>
+            </div>
+            <div class="data-row">
+                <span class="data-label">Telefone</span>
+                <span class="data-value">...</span>
+            </div>
+            <div class="data-row" style="margin-bottom:0;">
+                <span class="data-label">Membro desde</span>
+                <span class="data-value">...</span>
+            </div>
+        </div>
+
+        <div class="section-card">
+            <div class="section-header">
+                <span class="section-title"><i class="ph ph-car"></i> Minha Frota</span>
+            </div>
+
+            <div class="mini-vehicle">
+                <div class="mini-icon"><i class="ph-fill ph-car-profile"></i></div>
+                <div class="mini-info">
+                    <h4>Toyota Corolla</h4>
+                    <p>ABC-1234 &bull; Rastreador Ativo</p>
+                </div>
+            </div>
+
+            <div class="mini-vehicle">
+                <div class="mini-icon"><i class="ph-fill ph-motorcycle"></i></div>
+                <div class="mini-info">
+                    <h4>Honda CB 500</h4>
+                    <p>XYZ-9090 &bull; Apenas Proteção</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="section-card">
+            <div class="section-header">
+                <span class="section-title"><i class="ph ph-gear"></i> Configurações</span>
+            </div>
+            <ul class="menu-list">
+                <li class="menu-item">
+                    <div class="menu-left">
+                        <div class="menu-icon-box"><i class="ph ph-bell"></i></div>
+                        Notificações Push
+                    </div>
+                    <label class="switch">
+                        <input type="checkbox" checked>
+                        <span class="slider"></span>
+                    </label>
+                </li>
+                <li class="menu-item" onclick="alert('Função de biometria...')">
+                    <div class="menu-left">
+                        <div class="menu-icon-box"><i class="ph ph-fingerprint"></i></div>
+                        Entrada por Biometria
+                    </div>
+                    <label class="switch">
+                        <input type="checkbox" checked>
+                        <span class="slider"></span>
+                    </label>
+                </li>
+                <li class="menu-item" onclick="alert('Trocar senha...')">
+                    <div class="menu-left">
+                        <div class="menu-icon-box"><i class="ph ph-lock-key"></i></div>
+                        Alterar Senha
+                    </div>
+                    <i class="ph ph-caret-right menu-right"></i>
+                </li>
+            </ul>
+        </div>
+
+        <div class="section-card">
+            <div class="section-header">
+                <span class="section-title"><i class="ph ph-life-buoy"></i> Suporte e Legal</span>
+            </div>
+            <ul class="menu-list">
+                <li class="menu-item" onclick="window.location.href='home.html'">
+                    <div class="menu-left">
+                        <div class="menu-icon-box"><i class="ph ph-whatsapp-logo"></i></div>
+                        Fale Conosco
+                    </div>
+                    <i class="ph ph-caret-right menu-right"></i>
+                </li>
+                <li class="menu-item" onclick="alert('Abrindo PDF...')">
+                    <div class="menu-left">
+                        <div class="menu-icon-box"><i class="ph ph-file-text"></i></div>
+                        Termos de Uso
+                    </div>
+                    <i class="ph ph-caret-right menu-right"></i>
+                </li>
+                <li class="menu-item" onclick="alert('Abrindo Política...')">
+                    <div class="menu-left">
+                        <div class="menu-icon-box"><i class="ph ph-shield"></i></div>
+                        Política de Privacidade
+                    </div>
+                    <i class="ph ph-caret-right menu-right"></i>
+                </li>
+            </ul>
+        </div>
+
+        <button class="btn-logout" onclick="logout()">
+            <i class="ph-bold ph-sign-out"></i>
+            Sair da Conta
+        </button>
+        <p style="text-align: center; font-size: 11px; color: #cbd5e1; margin-top: 15px;">Versão do App: 1.0.2</p>
+
+    </div>
+
+    <nav class="tab-bar">
+        <a href="home.html" class="tab-item"><i class="ph ph-house"></i><span>Início</span></a>
+        <a href="#" class="tab-item" style="opacity: 0.5;" onclick="alert('Página em manutenção!'); return false;"><i
+                class="ph-fill ph-lock-key"></i><span>Em Breve</span></a>
+        <a href="mapa.html" class="tab-item">
+            <div class="tab-center"><i class="ph-fill ph-crosshair"></i></div>
+        </a>
+        <a href="#" class="tab-item" style="opacity: 0.5;" onclick="alert('Página em manutenção!'); return false;"><i
+                class="ph-fill ph-lock-key"></i><span>Em Breve</span></a>
+        <a href="#" class="tab-item active"><i class="ph-fill ph-user"></i><span>Perfil</span></a>
+    </nav>
+
+    <script type="module">
+        import { auth, db } from './js/config.js';
+        import { signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { doc, getDoc, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        // 1. Auth Check & Data Load
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                // Preenche dados básicos do Auth
+                document.querySelectorAll('.data-value')[0].innerText = user.email;
+
+                // Fetch Real Name from Firestore
+                try {
+                    // Try to find user by Auth UID field in Firestore (since we saved it there)
+                    const q = query(collection(db, "tenants", "UNIK", "users"), where("uid", "==", user.uid));
+                    const querySnapshot = await getDocs(q);
+
+                    if (!querySnapshot.empty) {
+                        const userData = querySnapshot.docs[0].data();
+                        document.querySelector('.user-name').innerText = userData.name || user.displayName || "Associado";
+
+                        // Update Avatar
+                        const uName = userData.name || user.displayName || "User";
+                        document.getElementById('profileImg').src = `https://ui-avatars.com/api/?name=${encodeURIComponent(uName)}&background=0f172a&color=D4AF37&size=200`;
+
+                        // Update Member Since if available
+                        if (userData.createdAt) {
+                            const date = new Date(userData.createdAt.seconds * 1000);
+                            const month = date.toLocaleString('pt-BR', { month: 'short' });
+                            const year = date.getFullYear();
+                            document.querySelectorAll('.data-value')[3].innerText = `${month.charAt(0).toUpperCase() + month.slice(1)}/${year}`;
+                        }
+
+                        // Update Phone and CPF if available (assuming correct index in data-row)
+                        if (userData.cpf) document.querySelectorAll('.data-value')[1].innerText = userData.cpf;
+                        if (userData.phone) document.querySelectorAll('.data-value')[2].innerText = userData.phone;
+                    } else {
+                        // Fallback if no Firestore doc linked
+                        document.querySelector('.user-name').innerText = user.displayName || "Associado";
+                    }
+                } catch (e) {
+                    console.error("Erro ao buscar perfil:", e);
+                    document.querySelector('.user-name').innerText = user.displayName || "Associado";
+                }
+
+                loadUserVehicles(user.uid);
+
+            } else {
+                window.location.href = 'index.html';
+            }
+        });
+
+        // 2. Carregar Frota
+        async function loadUserVehicles(uid) {
+            const container = document.querySelectorAll('.section-card')[1]; // O segundo card é "Minha Frota"
+
+            // Limpa o conteúdo atual de veículos (mantendo o header)
+            const header = container.querySelector('.section-header');
+            container.innerHTML = '';
+            container.appendChild(header);
+
+            try {
+                const q = query(collection(db, "tenants", "UNIK", "vehicles"), where("userId", "==", uid));
+                const snap = await getDocs(q);
+
+                if (snap.empty) {
+                    container.innerHTML += '<p style="text-align:center; color:#94a3b8; font-size:13px; padding:10px;">Nenhum veículo encontrado.</p>';
+                }
+
+                snap.forEach(doc => {
+                    const car = doc.data();
+                    const el = document.createElement('div');
+                    el.className = 'mini-vehicle';
+                    el.innerHTML = `
+                        <div class="mini-icon"><i class="ph-fill ph-car-profile"></i></div>
+                        <div class="mini-info">
+                            <h4>${car.model || 'Veículo'}</h4>
+                            <p>${car.plate || 'SEM-PLACA'} &bull; ${car.status === 'blocked' ? '<span style="color:red">Bloqueado</span>' : 'Rastreador Ativo'}</p>
+                        </div>
+                    `;
+                    container.appendChild(el);
+                });
+
+            } catch (error) {
+                console.error("Erro ao carregar frota:", error);
+            }
+        }
+
+        // 3. Logout
+        window.logout = function () {
+            if (confirm("Tem certeza que deseja sair?")) {
+                signOut(auth).then(() => {
+                    window.location.href = 'index.html';
+                }).catch((error) => {
+                    console.error("Erro ao sair:", error);
+                });
+            }
+        }
+    </script>
+
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('./service-worker.js')
+                .then(() => console.log('Service Worker registrado com sucesso!'))
+                .catch((error) => console.log('Falha ao registrar SW:', error));
+        }
+    </script>
+</body>
+
+</html>

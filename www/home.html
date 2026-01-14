@@ -1,0 +1,1409 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <link rel="manifest" href="manifest.json">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Unik Rastreia">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#0f172a">
+    <title>Início - Área do Associado</title>
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@500;600;700&display=swap"
+        rel="stylesheet">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+
+    <style>
+        :root {
+            --navy-dark: #0f172a;
+            --navy-light: #1e293b;
+            --gold: #D4AF37;
+            --gold-light: #FBF6E0;
+            --white: #ffffff;
+            --gray-bg: #f8fafc;
+            --text-dark: #334155;
+            --text-gray: #64748b;
+            --danger: #ef4444;
+            --gradient-gold: linear-gradient(135deg, #D4AF37 0%, #b49328 100%);
+            --gradient-blue: linear-gradient(135deg, #0f172a 0%, #334155 100%);
+        }
+
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--gray-bg);
+            margin: 0;
+            padding-bottom: 90px;
+            overflow-x: hidden;
+        }
+
+        /* --- HEADER --- */
+        .header {
+            background: var(--navy-dark);
+            color: white;
+            padding: 24px 24px 100px 24px;
+            border-radius: 0 0 32px 32px;
+            position: relative;
+        }
+
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .user-info h2 {
+            font-family: 'Poppins', sans-serif;
+            margin: 0;
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .user-info p {
+            margin: 2px 0 0 0;
+            font-size: 13px;
+            opacity: 0.8;
+            color: var(--gold);
+        }
+
+        .icon-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            cursor: pointer;
+            position: relative;
+            transition: background 0.2s;
+        }
+
+        .icon-btn:active {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .badge-dot {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 8px;
+            height: 8px;
+            background: var(--danger);
+            border-radius: 50%;
+            border: 1px solid var(--navy-dark);
+            display: block;
+        }
+
+        /* --- LISTAGEM DE VEÍCULOS (CARROSSEL) --- */
+        .vehicles-wrapper {
+            margin-top: -80px;
+            overflow: hidden;
+        }
+
+        .vehicles-list {
+            display: flex;
+            gap: 16px;
+            padding: 0 20px 24px 20px;
+            overflow-x: auto;
+            scroll-snap-type: x mandatory;
+            scrollbar-width: none;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .vehicles-list::-webkit-scrollbar {
+            display: none;
+        }
+
+        .vehicle-card {
+            background: white;
+            min-width: 85vw;
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.15);
+            scroll-snap-align: center;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .vehicle-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .vehicle-info h3 {
+            font-family: 'Poppins', sans-serif;
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--navy-dark);
+            margin: 0;
+        }
+
+        .vehicle-info p {
+            color: var(--text-gray);
+            font-size: 13px;
+            margin: 2px 0 0 0;
+            font-weight: 500;
+        }
+
+        .status-badge {
+            background: #dcfce7;
+            color: #166534;
+            font-size: 10px;
+            font-weight: 700;
+            padding: 4px 10px;
+            border-radius: 20px;
+            text-transform: uppercase;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        /* -- ESTILOS RASTREADOR -- */
+        .location-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: #f8fafc;
+            padding: 10px;
+            border-radius: 12px;
+        }
+
+        .loc-icon {
+            color: var(--gold);
+            font-size: 18px;
+        }
+
+        .loc-text {
+            font-size: 12px;
+            color: var(--text-dark);
+            font-weight: 500;
+            flex: 1;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .btn-map {
+            background: var(--navy-dark);
+            color: var(--gold);
+            border: none;
+            padding: 14px;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            cursor: pointer;
+            transition: background 0.2s;
+            width: 100%;
+        }
+
+        .btn-map:active {
+            background: #1e293b;
+        }
+
+        .no-tracker-box {
+            background: #fefce8;
+            border: 1px dashed #eab308;
+            padding: 12px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #854d0e;
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .btn-upsell {
+            background: white;
+            border: 2px solid var(--gold);
+            color: #b49328;
+            padding: 12px;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 13px;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-upsell:active {
+            transform: scale(0.98);
+            background: #fffbeb;
+        }
+
+        /* --- SOS --- */
+        .sos-container {
+            padding: 0 20px;
+            margin-bottom: 24px;
+        }
+
+        .btn-sos {
+            background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%);
+            width: 100%;
+            border: none;
+            padding: 16px;
+            border-radius: 16px;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 8px 20px -5px rgba(239, 68, 68, 0.4);
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-sos::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 50%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            animation: shine 3s infinite;
+        }
+
+        @keyframes shine {
+            100% {
+                left: 150%;
+            }
+        }
+
+        /* --- BANNERS --- */
+        .promo-scroll {
+            display: flex;
+            overflow-x: auto;
+            gap: 12px;
+            padding: 0 20px 24px 20px;
+            scrollbar-width: none;
+        }
+
+        .promo-scroll::-webkit-scrollbar {
+            display: none;
+        }
+
+        .promo-card {
+            min-width: 260px;
+            height: 120px;
+            border-radius: 16px;
+            padding: 16px;
+            color: white;
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .promo-blue {
+            background: var(--gradient-blue);
+        }
+
+        .promo-gold {
+            background: var(--gradient-gold);
+            color: var(--navy-dark);
+        }
+
+        .promo-tag {
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            background: rgba(255, 255, 255, 0.2);
+            width: fit-content;
+            padding: 4px 8px;
+            border-radius: 4px;
+            margin-bottom: 8px;
+        }
+
+        .promo-title {
+            font-family: 'Poppins', sans-serif;
+            font-size: 16px;
+            font-weight: 700;
+            margin: 0 0 4px 0;
+            max-width: 80%;
+        }
+
+        .promo-desc {
+            font-size: 12px;
+            opacity: 0.9;
+        }
+
+        .promo-icon {
+            position: absolute;
+            right: -10px;
+            bottom: -10px;
+            font-size: 80px;
+            opacity: 0.15;
+            transform: rotate(-15deg);
+        }
+
+        /* --- SERVIÇOS --- */
+        .section-header {
+            padding: 0 20px;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .section-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--navy-dark);
+        }
+
+        .see-all {
+            font-size: 12px;
+            color: var(--gold);
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        /* Grid ajustado para 2 itens ficarem bonitos */
+        .services-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+            padding: 0 20px;
+            margin-bottom: 30px;
+        }
+
+        .service-card {
+            background: white;
+            padding: 20px;
+            border-radius: 16px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            gap: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.03);
+            border: 1px solid transparent;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .service-card:active {
+            transform: scale(0.98);
+            background: #f8fafc;
+        }
+
+        .service-card i {
+            font-size: 28px;
+            color: var(--navy-dark);
+        }
+
+        .service-card span {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+
+        /* --- PARTNERS --- */
+        .partners-list {
+            padding: 0 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .partner-row {
+            background: white;
+            padding: 12px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-left: 4px solid var(--gold);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .partner-logo {
+            width: 40px;
+            height: 40px;
+            background: #f1f5f9;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            color: var(--text-gray);
+            font-size: 10px;
+        }
+
+        .partner-info {
+            flex: 1;
+        }
+
+        .partner-info h4 {
+            margin: 0;
+            font-size: 13px;
+            color: var(--navy-dark);
+        }
+
+        .partner-info p {
+            margin: 2px 0 0 0;
+            font-size: 11px;
+            color: var(--text-gray);
+        }
+
+        .partner-badge {
+            background: #fee2e2;
+            color: #b91c1c;
+            font-size: 10px;
+            font-weight: 700;
+            padding: 4px 8px;
+            border-radius: 4px;
+        }
+
+        /* --- NOTIFICATION DRAWER --- */
+        .notif-drawer {
+            position: fixed;
+            top: 0;
+            right: -100%;
+            width: 85%;
+            height: 100%;
+            max-width: 320px;
+            background: white;
+            z-index: 4000;
+            transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: -5px 0 25px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .notif-drawer.active {
+            right: 0;
+        }
+
+        .notif-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(15, 23, 42, 0.5);
+            z-index: 3999;
+            display: none;
+            backdrop-filter: blur(2px);
+        }
+
+        .notif-overlay.active {
+            display: block;
+        }
+
+        .notif-header {
+            padding: 24px;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--navy-dark);
+            color: white;
+        }
+
+        .notif-header h3 {
+            margin: 0;
+            font-family: 'Poppins', sans-serif;
+            font-size: 16px;
+        }
+
+        .notif-close {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+        }
+
+        .notif-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0;
+        }
+
+        .notif-item {
+            padding: 16px 24px;
+            border-bottom: 1px solid #f1f5f9;
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
+            transition: background 0.2s;
+        }
+
+        .notif-item:active {
+            background: #f8fafc;
+        }
+
+        .notif-item.unread {
+            background: #f0f9ff;
+            border-left: 3px solid var(--gold);
+        }
+
+        .notif-icon-box {
+            width: 36px;
+            height: 36px;
+            background: #e2e8f0;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            color: var(--navy-light);
+        }
+
+        .notif-content h4 {
+            margin: 0 0 4px 0;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--navy-dark);
+        }
+
+        .notif-content p {
+            margin: 0 0 6px 0;
+            font-size: 12px;
+            color: var(--text-gray);
+            line-height: 1.4;
+        }
+
+        .notif-time {
+            font-size: 10px;
+            color: #94a3b8;
+            font-weight: 500;
+        }
+
+        /* --- POPUP CSS (Mantido caso queira reativar futuramente, mas HTML removido) --- */
+        .popup-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 3000;
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(4px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .popup-overlay.active {
+            display: flex;
+            opacity: 1;
+        }
+
+        .popup-card {
+            background: white;
+            width: 100%;
+            max-width: 320px;
+            border-radius: 24px;
+            overflow: hidden;
+            text-align: center;
+            transform: scale(0.9);
+            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            position: relative;
+        }
+
+        .popup-overlay.active .popup-card {
+            transform: scale(1);
+        }
+
+        .popup-img {
+            width: 100%;
+            height: 140px;
+            background: var(--gradient-gold);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--navy-dark);
+        }
+
+        .popup-img i {
+            font-size: 64px;
+            opacity: 0.8;
+        }
+
+        .popup-body {
+            padding: 24px;
+        }
+
+        .popup-body h3 {
+            margin: 0 0 8px 0;
+            font-family: 'Poppins', sans-serif;
+            color: var(--navy-dark);
+        }
+
+        .popup-body p {
+            margin: 0 0 20px 0;
+            font-size: 13px;
+            color: var(--text-gray);
+            line-height: 1.5;
+        }
+
+        .btn-popup {
+            background: var(--navy-dark);
+            color: white;
+            border: none;
+            padding: 14px;
+            width: 100%;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .close-popup {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: rgba(0, 0, 0, 0.2);
+            color: white;
+            border: none;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* --- MODAIS GERAIS (Formulários) --- */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(15, 23, 42, 0.8);
+            z-index: 2000;
+            display: none;
+            justify-content: center;
+            align-items: flex-end;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            width: 100%;
+            border-radius: 24px 24px 0 0;
+            padding: 32px 24px 40px 24px;
+            position: relative;
+            transform: translateY(100%);
+            transition: transform 0.3s;
+            max-height: 90vh;
+            /* Scroll em telas pequenas */
+            overflow-y: auto;
+        }
+
+        .modal-overlay.active .modal-content {
+            transform: translateY(0);
+        }
+
+        .modal-title {
+            font-family: 'Poppins', sans-serif;
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--navy-dark);
+            margin-bottom: 8px;
+        }
+
+        .modal-desc {
+            color: var(--text-gray);
+            font-size: 14px;
+            margin-bottom: 24px;
+            line-height: 1.5;
+        }
+
+        .phone-display {
+            background: #f1f5f9;
+            padding: 20px;
+            border-radius: 16px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .phone-number {
+            font-family: 'Poppins', sans-serif;
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--navy-dark);
+            display: block;
+        }
+
+        .btn-block {
+            width: 100%;
+            padding: 16px;
+            border: none;
+            border-radius: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        .btn-primary {
+            background: var(--navy-dark);
+            color: white;
+        }
+
+        .btn-outline {
+            background: white;
+            border: 1px solid #e2e8f0;
+            color: var(--text-dark);
+        }
+
+        /* Estilos do Formulário */
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--navy-dark);
+            margin-bottom: 6px;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 14px;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+            outline: none;
+            background: #f8fafc;
+        }
+
+        .form-control:focus {
+            border-color: var(--gold);
+            background: white;
+        }
+
+        .upload-box {
+            border: 2px dashed #cbd5e1;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            color: var(--text-gray);
+            font-size: 13px;
+            cursor: pointer;
+        }
+
+        .upload-box i {
+            font-size: 24px;
+            color: var(--navy-light);
+            display: block;
+            margin-bottom: 8px;
+        }
+
+        /* TAB BAR */
+        .tab-bar {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            background: white;
+            display: flex;
+            justify-content: space-around;
+            padding: 12px 0;
+            border-top: 1px solid #e2e8f0;
+            z-index: 100;
+        }
+
+        .tab-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            color: var(--text-gray);
+            text-decoration: none;
+            font-size: 10px;
+            font-weight: 500;
+            width: 60px;
+        }
+
+        .tab-item i {
+            font-size: 24px;
+        }
+
+        .tab-item.active {
+            color: var(--navy-dark);
+        }
+
+        .tab-center {
+            background: var(--navy-dark);
+            color: var(--gold);
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: -30px;
+            box-shadow: 0 8px 20px rgba(15, 23, 42, 0.4);
+            border: 4px solid var(--gray-bg);
+        }
+
+        .tab-center i {
+            font-size: 24px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <header class="header">
+        <div class="header-top">
+            <div class="user-info">
+                <h2>Olá, Carlos</h2>
+                <p>Plano Ouro &bull; Ativo</p>
+            </div>
+            <button class="icon-btn" onclick="toggleNotifications()">
+                <i class="ph ph-bell"></i>
+                <div class="badge-dot" id="notifBadge"></div>
+            </button>
+        </div>
+    </header>
+
+    <div class="vehicles-wrapper">
+        <div class="vehicles-list">
+            <div class="vehicle-card" style="justify-content:center; align-items:center; height:180px;">
+                <i class="ph ph-spinner ph-spin" style="font-size:30px; color: var(--navy-light);"></i>
+            </div>
+        </div>
+    </div>
+
+    <div class="sos-container">
+        <button class="btn-sos" onclick="openModal('sosModal')">
+            <div class="sos-content" style="display:flex; align-items:center; gap:12px;">
+                <i class="ph-fill ph-phone-outgoing" style="font-size: 24px;"></i>
+                <div class="sos-text">
+                    <strong style="display:block; font-size:16px;">ACIONAR SOCORRO 24H</strong>
+                    <span style="display:block; font-size:12px; opacity:0.9;">Guincho, Pane e Chaveiro</span>
+                </div>
+            </div>
+            <i class="ph-bold ph-caret-right"></i>
+        </button>
+    </div>
+
+    <div class="section-header">
+        <span class="section-title" style="color: var(--gold); margin:0;">Novidades & Promoções</span>
+    </div>
+    <div class="promo-scroll">
+        <div class="promo-card promo-gold" onclick="alert('Link copiado!')">
+            <div class="promo-tag">Ganhe R$ 50</div>
+            <div class="promo-title">Indique um Amigo</div>
+            <div class="promo-desc">Desconto na sua próxima mensalidade.</div>
+            <i class="ph ph-users-three promo-icon"></i>
+        </div>
+        <div class="promo-card promo-blue" onclick="alert('Abrindo cupom...')">
+            <div class="promo-tag">Combustível</div>
+            <div class="promo-title">Desconto Shell Box</div>
+            <div class="promo-desc">Ative e ganhe 5% off no abastecimento.</div>
+            <i class="ph ph-gas-pump promo-icon"></i>
+        </div>
+    </div>
+
+    <div class="section-header">
+        <span class="section-title">Serviços</span>
+    </div>
+    <div class="services-grid">
+        <div class="service-card" onclick="openInvoicesModal()">
+            <i class="ph-fill ph-receipt" style="color: var(--navy-dark);"></i>
+            <span>Faturas</span>
+        </div>
+        <div class="service-card" onclick="openModal('eventModal')">
+            <i class="ph-fill ph-warning-circle" style="color: #ef4444;"></i>
+            <span>Acionar Evento</span>
+        </div>
+    </div>
+
+    <div class="section-header">
+        <span class="section-title">Use seus Benefícios</span>
+        <a href="#" class="see-all">Ver todos</a>
+    </div>
+    <div class="partners-list">
+        <div class="partner-row" onclick="alert('Cupom DROGA10 aplicado!')">
+            <div class="partner-logo">LOGO</div>
+            <div class="partner-info">
+                <h4>Drogaria São Paulo</h4>
+                <p>Até 30% de desconto em medicamentos.</p>
+            </div>
+            <span class="partner-badge">-30%</span>
+        </div>
+        <div class="partner-row" onclick="alert('Cupom CINEMA2X1 aplicado!')">
+            <div class="partner-logo">LOGO</div>
+            <div class="partner-info">
+                <h4>Cinemark</h4>
+                <p>Compre 1 e leve 2 ingressos.</p>
+            </div>
+            <span class="partner-badge">2x1</span>
+        </div>
+    </div>
+
+    <nav class="tab-bar">
+        <a href="#" class="tab-item active"><i class="ph-fill ph-house"></i><span>Início</span></a>
+        <a href="#" class="tab-item" style="opacity: 0.5;" onclick="alert('Página em manutenção!'); return false;"><i
+                class="ph-fill ph-lock-key"></i><span>Em Breve</span></a>
+        <a href="mapamenu.html" class="tab-item">
+            <div class="tab-center"><i class="ph-fill ph-crosshair"></i></div>
+        </a>
+        <a href="#" class="tab-item" style="opacity: 0.5;" onclick="alert('Página em manutenção!'); return false;"><i
+                class="ph-fill ph-lock-key"></i><span>Em Breve</span></a>
+        <a href="perfil.html" class="tab-item"><i class="ph ph-user"></i><span>Perfil</span></a>
+    </nav>
+
+    <div class="notif-overlay" id="notifOverlay" onclick="toggleNotifications()"></div>
+    <div class="notif-drawer" id="notifDrawer">
+        <div class="notif-header">
+            <h3>Notificações</h3>
+            <button class="notif-close" onclick="toggleNotifications()">&times;</button>
+        </div>
+        <div class="notif-list" id="notifList"></div>
+    </div>
+
+    <div id="sosModal" class="modal-overlay" onclick="closeModalClick(event, 'sosModal')">
+        <div class="modal-content">
+            <div class="modal-title">Assistência 24 Horas</div>
+            <p style="color: #64748b; margin-bottom: 20px;">Ligue agora para nossa central.</p>
+            <div class="phone-display">
+                <span style="font-size: 12px; color: #64748b; text-transform: uppercase;">Ligue Grátis</span>
+                <span class="phone-number">0800 123 4567</span>
+            </div>
+            <button class="btn-block btn-primary" onclick="window.location.href='tel:08001234567'">Ligar Agora</button>
+            <button class="btn-block btn-outline" onclick="forceClose('sosModal')">Cancelar</button>
+        </div>
+    </div>
+
+    <div id="eventModal" class="modal-overlay" onclick="closeModalClick(event, 'eventModal')">
+        <div class="modal-content">
+            <div class="modal-title">Acionar Evento</div>
+            <p class="modal-desc">Informe o que houve para iniciarmos o processo.</p>
+
+            <form id="eventForm" onsubmit="submitEvent(event)">
+                <div class="form-group">
+                    <label>Qual veículo?</label>
+                    <select class="form-control" id="eventVehicle">
+                        <option>Carregando...</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Tipo de Evento</label>
+                    <select class="form-control" id="eventType">
+                        <option value="Colisao">Colisão (Batida)</option>
+                        <option value="Roubo">Roubo ou Furto</option>
+                        <option value="Pane">Pane Elétrica</option>
+                        <option value="Terceiros">Terceiros</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Data e Hora Aproximada</label>
+                    <input type="datetime-local" class="form-control" id="eventDate">
+                </div>
+
+                <div class="form-group">
+                    <label>Local do Evento (Opcional)</label>
+                    <input type="text" class="form-control" id="eventAddress"
+                        placeholder="Rua, Bairro ou Ponto de Referência">
+                </div>
+
+                <div class="form-group">
+                    <label>Nº Boletim de Ocorrência (Opcional)</label>
+                    <input type="text" class="form-control" id="eventBO" placeholder="Ex: 1234/2025">
+                </div>
+
+                <div class="form-group">
+                    <label>Evidências (Fotos/Docs) - Max 5 (Opcional)</label>
+                    <div class="upload-box" onclick="document.getElementById('eventFiles').click()">
+                        <i class="ph ph-camera"></i>
+                        <span id="fileCountText">Toque para anexar até 5 arquivos</span>
+                    </div>
+                    <input type="file" id="eventFiles" multiple accept="image/*,application/pdf" style="display: none;"
+                        onchange="updateFileCount(this)">
+                </div>
+
+                <button type="submit" class="btn-block btn-primary">Enviar Comunicado</button>
+            </form>
+            <button class="btn-block btn-outline" onclick="forceClose('eventModal')">Cancelar</button>
+        </div>
+    </div>
+
+    <div id="invoicesModal" class="modal-overlay" onclick="closeModalClick(event, 'invoicesModal')">
+        <div class="modal-content">
+            <div class="modal-title">Minhas Faturas</div>
+            <p class="modal-desc">Visualize e pague seus boletos em aberto.</p>
+
+            <div id="invoicesList" style="max-height: 400px; overflow-y: auto;">
+                <div style="text-align:center; padding:20px;">
+                    <i class="ph ph-spinner ph-spin" style="font-size:24px;"></i> Carregando...
+                </div>
+            </div>
+
+            <button class="btn-block btn-outline" onclick="forceClose('invoicesModal')">Fechar</button>
+        </div>
+    </div>
+
+    <script type="module">
+        import { auth, db } from './js/config.js';
+        import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { collection, query, where, getDocs, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { SGAClient } from './js/sga-client.js';
+
+        // NOTE: Substitua 'API_URL', 'USER' e 'PASS' pelas credenciais reais do SGA.
+        const sga = new SGAClient('https://api.hinova.com.br/api/sga/v2', 'SEU_USUARIO_SGA', 'SUA_SENHA_SGA');
+
+        let currentUser = null;
+        let crmUserId = null;
+
+        // 1. Auth Check
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                currentUser = user;
+
+                try {
+                    const q = query(collection(db, "tenants", "UNIK", "users"), where("uid", "==", user.uid));
+                    const querySnapshot = await getDocs(q);
+
+                    let displayName = user.displayName || 'Associado';
+
+                    if (!querySnapshot.empty) {
+                        const userDoc = querySnapshot.docs[0];
+                        const userData = userDoc.data();
+                        crmUserId = userDoc.id;
+                        displayName = userData.name || displayName;
+
+                        console.log("Usuário CRM encontrado:", crmUserId, userData.name);
+
+                        // Fetch Boletos SGA
+                        if (userData.cpf) {
+                            fetchBoletosSGA(userData.cpf);
+                        }
+                    } else {
+                        console.warn("Usuário não encontrado na coleção 'users' do CRM. Usando UID do Auth.");
+                        crmUserId = user.uid;
+                    }
+
+                    document.querySelector('.user-info h2').innerText = `Olá, ${displayName}`;
+
+                    // Carrega Veículos usando o ID do CRM
+                    loadVehicles(crmUserId);
+
+                } catch (err) {
+                    console.error("Erro ao buscar perfil do usuário:", err);
+                    document.querySelector('.user-info h2').innerText = `Olá, ${user.displayName || 'Associado'}`;
+                    loadVehicles(user.uid);
+                }
+
+                loadNotifications();
+            } else {
+                window.location.href = 'login.html';
+            }
+        });
+
+        // Exposing functions to global scope
+        window.loadNotifications = loadNotifications;
+        window.toggleNotifications = toggleNotifications;
+        // Função closePopup removida pois o popup foi removido
+        window.openModal = openModal;
+        window.closeModalClick = closeModalClick;
+        window.forceClose = forceClose;
+
+        // Função visual para mostrar quantos arquivos foram selecionados (NOVA)
+        window.updateFileCount = function (input) {
+            const label = document.getElementById('fileCountText');
+            if (input.files && input.files.length > 0) {
+                if (input.files.length > 5) {
+                    alert("Por favor, selecione no máximo 5 arquivos.");
+                    input.value = ""; // Limpa seleção
+                    label.innerText = "Toque para anexar até 5 arquivos";
+                } else {
+                    label.innerText = `${input.files.length} arquivo(s) selecionado(s)`;
+                    label.style.color = "var(--navy-dark)";
+                    label.style.fontWeight = "600";
+                }
+            } else {
+                label.innerText = "Toque para anexar até 5 arquivos";
+            }
+        }
+
+
+        // 2. Carregar Veículos
+        async function loadVehicles(uid) {
+            const list = document.querySelector('.vehicles-list');
+            try {
+                list.innerHTML = '<div class="vehicle-card" style="justify-content:center; align-items:center; height:180px;"><i class="ph ph-spinner ph-spin" style="font-size:30px;"></i></div>';
+
+                const q = query(
+                    collection(db, "tenants", "UNIK", "vehicles"),
+                    where("userId", "==", uid)
+                );
+                const snap = await getDocs(q);
+
+                if (snap.empty) {
+                    list.innerHTML = `
+                        <div class="vehicle-card" style="text-align:center;">
+                            <i class="ph-duotone ph-car" style="font-size:40px; color:#94a3b8; display:block; margin:0 auto 10px auto;"></i>
+                            <h3 style="font-size:16px;">Nenhum veículo</h3>
+                            <p style="font-size:12px;">Entre em contato para ativar.</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                list.innerHTML = '';
+                snap.forEach(doc => {
+                    const car = doc.data();
+                    const card = document.createElement('div');
+                    card.className = 'vehicle-card';
+                    card.innerHTML = `
+                        <div class="vehicle-header">
+                            <div class="vehicle-info">
+                                <h3>${car.model || 'Veículo'}</h3>
+                                <p>${car.plate || 'SEM-PLACA'} &bull; ${car.year || '----'}</p>
+                            </div>
+                            <span class="status-badge" style="${car.status === 'blocked' ? 'background:#fee2e2; color:#b91c1c;' : ''}">
+                                <i class="ph-fill ${car.status === 'blocked' ? 'ph-lock-key' : 'ph-shield-check'}"></i> 
+                                ${car.status === 'blocked' ? 'Bloqueado' : 'Protegido'}
+                            </span>
+                            ${car.hasBlocker ? `<span class="status-badge" style="background:#fee2e2; color:#991b1b; margin-left:8px;"><i class="ph-fill ph-lock-key"></i> BLOQUEADOR</span>` : ''}
+                        </div>
+                        <div class="location-row" style="margin-bottom: 12px;">
+                            <i class="ph-fill ph-map-pin loc-icon"></i>
+                            <span class="loc-text">${car.address || 'Localização não disponível'}</span>
+                        </div>
+                        <button class="btn-map" onclick="window.location.href='mapa.html?id=${doc.id}'">
+                            <i class="ph-fill ph-crosshair"></i>
+                            VER NO MAPA
+                        </button>
+                    `;
+                    list.appendChild(card);
+                });
+
+                // Adiciona opções ao Select do Modal de Eventos (Atualizado para usar ID específico)
+                const selectVehicle = document.getElementById('eventVehicle');
+                if (selectVehicle) {
+                    selectVehicle.innerHTML = '';
+                    snap.forEach(doc => {
+                        const car = doc.data();
+                        const opt = document.createElement('option');
+                        opt.value = doc.id;
+                        opt.innerText = `${car.model} (${car.plate})`;
+                        selectVehicle.appendChild(opt);
+                    });
+                }
+
+            } catch (e) {
+                console.error("Erro ao carregar veículos:", e);
+                list.innerHTML = '<p style="padding:20px; color:red;">Erro ao carregar veículos.</p>';
+            }
+        }
+
+        // 3. Enviar Evento (SOS/Sinistro) - ATUALIZADO
+        window.submitEvent = async function (e) {
+            e.preventDefault();
+            const btn = e.target.querySelector('button[type="submit"]');
+            const originalText = btn.innerText;
+
+            btn.innerText = "Enviando...";
+            btn.disabled = true;
+
+            try {
+                // Captura dos elementos pelo ID
+                const vehicleId = document.getElementById('eventVehicle').value;
+                const type = document.getElementById('eventType').value;
+                const date = document.getElementById('eventDate').value;
+
+                // Novos campos
+                const address = document.getElementById('eventAddress').value || "Não informado";
+                const boNumber = document.getElementById('eventBO').value || "Não informado";
+                const fileInput = document.getElementById('eventFiles');
+                const fileCount = fileInput.files ? fileInput.files.length : 0;
+
+                await addDoc(collection(db, "tenants", "UNIK", "events"), {
+                    userId: auth.currentUser.uid,
+                    vehicleId: vehicleId,
+                    type: 'sinistro',
+                    subType: type,
+                    dateOccurrence: date,
+                    address: address, // Novo
+                    boNumber: boNumber, // Novo
+                    evidenceCount: fileCount, // Novo
+                    desc: `Ocorrido em ${date}. BO: ${boNumber}. Local: ${address}`,
+                    status: 'open',
+                    timestamp: serverTimestamp()
+                });
+
+                alert("Evento comunicado! Entraremos em contato.");
+                forceClose('eventModal');
+
+                // Reset visual do form
+                e.target.reset();
+                document.getElementById('fileCountText').innerText = "Toque para anexar até 5 arquivos";
+
+            } catch (err) {
+                console.error(err);
+                alert("Erro ao enviar. Tente novamente.");
+            } finally {
+                btn.innerText = originalText;
+                btn.disabled = false;
+            }
+        }
+
+        function loadNotifications() {
+            const list = document.getElementById('notifList');
+            renderNotifications(list);
+            const badge = document.getElementById('notifBadge');
+            if (badge) {
+                const hasUnread = notificationsData.some(n => n.unread);
+                badge.style.display = hasUnread ? 'block' : 'none';
+            }
+        }
+
+        let notificationsData = [
+            { id: 1, title: 'Sistema Protegido', msg: 'Seu veículo está monitorado e seguro.', time: 'Agora', type: 'lock', unread: true },
+            { id: 2, title: 'Bem-vindo ao Clube', msg: 'Aproveite descontos exclusivos.', time: 'Ontem', type: 'info', unread: true },
+            { id: 3, title: 'Manutenção', msg: 'Lembre-se da revisão preventiva.', time: '3 dias atrás', type: 'alert', unread: false }
+        ];
+
+        async function fetchBoletosSGA(cpf) {
+            // Recurso desativado a pedido
+            // console.log("Buscando boletos SGA para:", cpf);
+        }
+
+
+        let userBoletos = []; // Armazena boletos brutos
+
+        function processBoletos(boletos) {
+            // Recurso desativado a pedido
+        }
+
+        window.openInvoicesModal = function () {
+            const modal = document.getElementById('invoicesModal');
+            const listContainer = document.getElementById('invoicesList');
+
+            if (userBoletos.length === 0) {
+                listContainer.innerHTML = '<div style="text-align:center; color:#94a3b8; padding:20px;">Nenhuma fatura encontrada.</div>';
+            } else {
+                listContainer.innerHTML = userBoletos.map(b => `
+                    <div style="background:#f8fafc; padding:16px; border-radius:12px; margin-bottom:12px; border:1px solid #e2e8f0;">
+                         <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px;">
+                            <div>
+                                <h4 style="margin:0; color:var(--navy-dark); font-size:14px;">Fatura #${b.nosso_numero}</h4>
+                                <p style="margin:0; color:var(--text-gray); font-size:12px;">Vence em: ${b.data_vencimento}</p>
+                            </div>
+                            <span style="background:${b.situacao === 'PAGO' ? '#dcfce7' : '#fee2e2'}; color:${b.situacao === 'PAGO' ? '#166534' : '#b91c1c'}; font-size:10px; padding:4px 8px; border-radius:4px; font-weight:700;">
+                                ${b.situacao || 'ABERTO'}
+                            </span>
+                         </div>
+                         <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <span style="font-weight:700; color:var(--navy-dark);">R$ ${b.valor_boleto}</span>
+                            <button onclick="window.open('${b.link_boleto}', '_blank')" style="background:var(--navy-dark); color:var(--gold); border:none; padding:8px 16px; border-radius:8px; font-size:12px; font-weight:600; cursor:pointer;">
+                                <i class="ph-bold ph-receipt"></i> Pagar
+                            </button>
+                         </div>
+                    </div>
+                `).join('');
+            }
+
+            openModal('invoicesModal');
+        }
+
+
+        function toggleNotifications() {
+            const drawer = document.getElementById('notifDrawer');
+            const overlay = document.getElementById('notifOverlay');
+            const badge = document.getElementById('notifBadge');
+            const list = document.getElementById('notifList');
+
+            if (!drawer.classList.contains('active')) {
+                renderNotifications(list);
+                drawer.classList.add('active');
+                overlay.classList.add('active');
+                badge.style.display = 'none';
+            } else {
+                drawer.classList.remove('active');
+                overlay.classList.remove('active');
+            }
+        }
+
+        function renderNotifications(container) {
+            if (container.innerHTML.trim() !== "") return;
+            container.innerHTML = notificationsData.map(n => `
+                <div class="notif-item ${n.unread ? 'unread' : ''}">
+                    <div class="notif-icon-box" style="color: ${n.type === 'bill' ? '#059669' : n.type === 'lock' ? '#10b981' : n.type === 'alert' ? '#D97706' : '#4F46E5'}">
+                        <i class="${n.type === 'bill' ? 'ph-fill ph-receipt' : n.type === 'lock' ? 'ph-fill ph-lock-key' : n.type === 'alert' ? 'ph-fill ph-warning' : 'ph-fill ph-star'}"></i>
+                    </div>
+                    <div class="notif-content">
+                        <h4>${n.title}</h4>
+                        <p>${n.msg}</p>
+                        <span class="notif-time">${n.time}</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Lógica do popup removida (setTimeout e função closePopup)
+
+        function openModal(id) {
+            const modal = document.getElementById(id);
+            modal.style.display = 'flex';
+            setTimeout(() => modal.classList.add('active'), 10);
+        }
+
+        function closeModalClick(e, id) {
+            if (e.target.id === id) forceClose(id);
+        }
+
+        function forceClose(id) {
+            const modal = document.getElementById(id);
+            modal.classList.remove('active');
+            setTimeout(() => modal.style.display = 'none', 300);
+        }
+    </script>
+
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('./service-worker.js')
+                .then(() => console.log('Service Worker registrado com sucesso!'))
+                .catch((error) => console.log('Falha ao registrar SW:', error));
+        }
+    </script>
+</body>
+
+</html>
