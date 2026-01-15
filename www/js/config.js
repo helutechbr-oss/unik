@@ -1,7 +1,7 @@
-import { initializeApp } from "./firebase/app/dist/index.esm.js";
-import { getAuth } from "./firebase/auth/dist/index.esm.js";
-import { getFirestore } from "./firebase/firestore/dist/index.esm.js";
-import { getStorage } from "./firebase/storage/dist/index.esm.js";
+import { initializeApp } from "./local_firebase/firebase-app.js";
+import { getAuth } from "./local_firebase/firebase-auth.js";
+import { getFirestore } from "./local_firebase/firebase-firestore.js";
+import { getStorage } from "./local_firebase/firebase-storage.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyB1kKppCK9a5fkNv3AatAmg-7kIWewikLg",
