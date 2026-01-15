@@ -1,7 +1,7 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-import { getAuth } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-import { getFirestore } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-import { getStorage } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js"; // <--- ADICIONADO
+import { initializeApp } from "./firebase/app/dist/index.esm.js";
+import { getAuth } from "./firebase/auth/dist/index.esm.js";
+import { getFirestore } from "./firebase/firestore/dist/index.esm.js";
+import { getStorage } from "./firebase/storage/dist/index.esm.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyB1kKppCK9a5fkNv3AatAmg-7kIWewikLg",
