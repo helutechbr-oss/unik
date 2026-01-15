@@ -352,9 +352,29 @@
         <span>Monitoramento 24h</span>
     </div>
 
-    <script type="module">
-        import { auth } from './js/config.js';
-        import { signInWithEmailAndPassword } from "./js/local_firebase/firebase-auth.js";
+    <!-- CARREGAR FIREBASE GLOBALMENTE (VERSÃO COMPAT MAIS ESTÁVEL) -->
+    <script src="js/local_firebase/firebase-app-compat.js"></script>
+    <script src="js/local_firebase/firebase-auth-compat.js"></script>
+    <script src="js/local_firebase/firebase-firestore-compat.js"></script>
+
+    <script>
+        // Inicializar Firebase Globalmente
+        const firebaseConfig = {
+            apiKey: "AIzaSyB1kKppCK9a5fkNv3AatAmg-7kIWewikLg",
+            authDomain: "rastreiamais-81087.firebaseapp.com",
+            projectId: "rastreiamais-81087",
+            storageBucket: "rastreiamais-81087.firebasestorage.app",
+            messagingSenderId: "804875668297",
+            appId: "1:804875668297:web:175d027f67b4faca192898",
+            measurementId: "G-QML2D91DJW"
+        };
+
+        try {
+            firebase.initializeApp(firebaseConfig);
+            console.log("Firebase Global Iniciado!");
+        } catch (e) { console.log("Firebase já iniciado"); }
+
+        const auth = firebase.auth();
 
         const form = document.getElementById('loginForm');
         const btnLogin = document.getElementById('btnLogin');
@@ -366,7 +386,7 @@
 
             // Debug Debug
             document.getElementById('debug-log').style.display = 'block';
-            console.log("Botão clicado! Iniciando login...");
+            console.log("Botão clicado! Iniciando login (Compat)...");
 
             // Animação do botão
             const originalText = btnLogin.innerHTML;
@@ -378,8 +398,8 @@
             const password = document.getElementById('password').value;
 
             try {
-                // Login Real
-                await signInWithEmailAndPassword(auth, email, password);
+                // Login Real (Sintaxe Compat)
+                await auth.signInWithEmailAndPassword(email, password);
 
                 // Sucesso
                 btnLogin.style.background = '#10b981';
@@ -398,10 +418,16 @@
                     msg = "E-mail ou senha incorretos.";
                 } else if (error.code === 'auth/too-many-requests') {
                     msg = "Muitas tentativas. Tente mais tarde.";
+                } else if (error.code === 'auth/network-request-failed') {
+                    msg = "Verifique sua internet.";
                 }
 
                 errorText.innerText = msg;
                 errorDisplay.style.display = 'flex';
+
+                // Log visual para debug
+                const log = document.getElementById('debug-log');
+                if (log) log.innerHTML += "<div>ERRO: " + error.code + "</div>";
 
                 btnLogin.innerHTML = originalText;
                 btnLogin.disabled = false;
