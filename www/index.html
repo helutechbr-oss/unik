@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-br">
+
 <head>
     <link rel="manifest" href="manifest.json">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -8,20 +9,47 @@
     <link rel="apple-touch-icon" href="icon-192.png">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="theme-color" content="#0f172a"> <title>Minha Proteção</title>
-    
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@500;600;700&display=swap" rel="stylesheet">
+    <!-- Permissive CSP for debugging -->
+    <meta http-equiv="Content-Security-Policy"
+        content="default-src * 'self' 'unsafe-inline' 'unsafe-eval' data: gap: content: blob:; style-src * 'self' 'unsafe-inline'; script-src * 'self' 'unsafe-inline' 'unsafe-eval';">
+    <meta name="theme-color" content="#0f172a">
+    <title>Minha Proteção</title>
+
+    <!-- CRITICAL DEBUGGING SCRIPT -->
+    <script>
+        window.onerror = function (msg, url, line) {
+            alert("ERRO CRITICO:\n" + msg + "\nLinha: " + line);
+            var log = document.getElementById('debug-log');
+            if (log) log.innerHTML += "<div>ERRO: " + msg + " (L" + line + ")</div>";
+        };
+        window.addEventListener('unhandledrejection', function (event) {
+            alert("ERRO PROMISE:\n" + event.reason);
+            var log = document.getElementById('debug-log');
+            if (log) log.innerHTML += "<div>REJEITADO: " + event.reason + "</div>";
+        });
+        console.log = (function (old_function) {
+            return function (text) {
+                old_function(text);
+                var log = document.getElementById('debug-log');
+                if (log) log.innerHTML += "<div>LOG: " + text + "</div>";
+            };
+        }(console.log));
+    </script>
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@500;600;700&display=swap"
+        rel="stylesheet">
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
 
     <style>
         :root {
             /* Identidade Visual Premium (Cliente Final) */
-            --navy-dark: #0f172a;       
+            --navy-dark: #0f172a;
             --navy-light: #1e293b;
-            --gold: #D4AF37;            
+            --gold: #D4AF37;
             --gold-hover: #b5952f;
-            --gold-light: #fcfbf5;      
-            
+            --gold-light: #fcfbf5;
+
             --bg-page: #f1f5f9;
             --white: #ffffff;
             --text-main: #334155;
@@ -40,7 +68,8 @@
             margin: 0;
             display: flex;
             flex-direction: column;
-            justify-content: center; /* Centraliza verticalmente */
+            justify-content: center;
+            /* Centraliza verticalmente */
             align-items: center;
             min-height: 100vh;
             padding: 24px;
@@ -56,7 +85,7 @@
             width: 100%;
             padding: 0 20px;
         }
-        
+
         .welcome-header h2 {
             font-family: 'Poppins', sans-serif;
             margin: 0;
@@ -64,7 +93,7 @@
             font-size: 20px;
             color: var(--gold);
         }
-        
+
         .welcome-header p {
             margin: 5px 0 0 0;
             font-size: 13px;
@@ -82,15 +111,19 @@
             text-align: center;
             position: relative;
             z-index: 10;
-            margin-top: 40px; /* Espaço para o header */
-            
+            margin-top: 40px;
+            /* Espaço para o header */
+
             opacity: 0;
             transform: translateY(20px);
             animation: slideUpFade 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
         }
 
         @keyframes slideUpFade {
-            to { opacity: 1; transform: translateY(0); }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         /* Ícone de Carro (Foco no produto) */
@@ -104,9 +137,10 @@
             align-items: center;
             justify-content: center;
             font-size: 40px;
-            margin-top: -80px; /* Sobe o ícone para fora do card */
+            margin-top: -80px;
+            /* Sobe o ícone para fora do card */
             margin-bottom: 20px;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
             border: 4px solid var(--gold);
         }
 
@@ -171,7 +205,9 @@
             background-color: var(--gold-light);
         }
 
-        input:focus + i { color: var(--gold); }
+        input:focus+i {
+            color: var(--gold);
+        }
 
         /* Botão Principal */
         .btn-primary {
@@ -197,11 +233,16 @@
         .btn-primary::after {
             content: '';
             position: absolute;
-            bottom: 0; left: 0; width: 100%; height: 3px;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
             background: var(--gold);
         }
 
-        .btn-primary:active { transform: scale(0.98); }
+        .btn-primary:active {
+            transform: scale(0.98);
+        }
 
         /* Links */
         .help-links {
@@ -218,7 +259,10 @@
             font-weight: 500;
         }
 
-        .help-links a.highlight { color: var(--navy-dark); font-weight: 600; }
+        .help-links a.highlight {
+            color: var(--navy-dark);
+            font-weight: 600;
+        }
 
         /* Footer */
         .footer {
@@ -226,6 +270,7 @@
             bottom: 20px;
             text-align: center;
         }
+
         .footer span {
             display: block;
             font-size: 10px;
@@ -249,6 +294,7 @@
         }
     </style>
 </head>
+
 <body>
 
     <div class="welcome-header">
@@ -297,6 +343,11 @@
         </div>
     </div>
 
+    <div id="debug-log"
+        style="position:fixed; top:0; left:0; width:100%; height:150px; background:rgba(0,0,0,0.8); color:#0f0; overflow:scroll; z-index:9999; font-size:10px; display:none;">
+        DEBUG MODE ON<br>
+    </div>
+
     <div class="footer">
         <span>Monitoramento 24h</span>
     </div>
@@ -312,7 +363,11 @@
 
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
-            
+
+            // Debug Debug
+            document.getElementById('debug-log').style.display = 'block';
+            console.log("Botão clicado! Iniciando login...");
+
             // Animação do botão
             const originalText = btnLogin.innerHTML;
             btnLogin.innerHTML = '<i class="ph ph-spinner-gap ph-spin"></i> Acessando...';
@@ -325,29 +380,29 @@
             try {
                 // Login Real
                 await signInWithEmailAndPassword(auth, email, password);
-                
+
                 // Sucesso
-                btnLogin.style.background = '#10b981'; 
+                btnLogin.style.background = '#10b981';
                 btnLogin.innerHTML = 'Sucesso! Redirecionando...';
-                
+
                 setTimeout(() => {
-                    window.location.href = 'home.html'; 
+                    window.location.href = 'home.html';
                 }, 800);
 
             } catch (error) {
                 console.error("Erro Login:", error);
-                
+
                 // Tratamento de Erros
                 let msg = "Erro ao fazer login.";
-                if(error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
+                if (error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
                     msg = "E-mail ou senha incorretos.";
-                } else if(error.code === 'auth/too-many-requests') {
+                } else if (error.code === 'auth/too-many-requests') {
                     msg = "Muitas tentativas. Tente mais tarde.";
                 }
 
                 errorText.innerText = msg;
                 errorDisplay.style.display = 'flex';
-                
+
                 btnLogin.innerHTML = originalText;
                 btnLogin.disabled = false;
                 btnLogin.style.background = ''; // Reseta cor
@@ -356,11 +411,12 @@
     </script>
 
     <script>
-    if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('./service-worker.js')
-            .then(() => console.log('Service Worker registrado com sucesso!'))
-            .catch((error) => console.log('Falha ao registrar SW:', error));
-    }
-</script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('./service-worker.js')
+                .then(() => console.log('Service Worker registrado com sucesso!'))
+                .catch((error) => console.log('Falha ao registrar SW:', error));
+        }
+    </script>
 </body>
+
 </html>
