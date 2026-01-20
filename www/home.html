@@ -1079,11 +1079,42 @@
         </div>
     </div>
 
+    <!-- CARREGAR FIREBASE GLOBALMENTE (COMPAT MODE) -->
+    <script src="js/local_firebase/firebase-app-compat.js"></script>
+    <script src="js/local_firebase/firebase-auth-compat.js"></script>
+    <script src="js/local_firebase/firebase-firestore-compat.js"></script>
+
     <script type="module">
-        import { auth, db } from './js/config.js';
-        import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { collection, query, where, getDocs, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
         import { SGAClient } from './js/sga-client.js';
+
+        // Inicializar Firebase (Mesma config do index.html)
+        const firebaseConfig = {
+            apiKey: "AIzaSyB1kKppCK9a5fkNv3AatAmg-7kIWewikLg",
+            authDomain: "rastreiamais-81087.firebaseapp.com",
+            projectId: "rastreiamais-81087",
+            storageBucket: "rastreiamais-81087.firebasestorage.app",
+            messagingSenderId: "804875668297",
+            appId: "1:804875668297:web:175d027f67b4faca192898",
+            measurementId: "G-QML2D91DJW"
+        };
+
+        if (typeof firebase !== 'undefined' && !firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+
+        // Referências Globais
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        // Funções auxiliares do Firestore (Compat Mode não usa imports modulares para funções)
+        const collection = (db, ...path) => db.collection(path.join('/'));
+        // query, where, getDocs, addDoc precisariam ser adaptados, mas no Compat usa-se sintaxe encadeada:
+        // db.collection('x').where('y', '==', 'z').get()
+
+        // ATENÇÃO: O código abaixo vai ser adaptado para usar a sintaxe compatível (v8 web sdk style)
+        // em vez da v9 modular (collection, query, getDocs)
+
+        // Fim dos imports de dependência
 
         // NOTE: Substitua 'API_URL', 'USER' e 'PASS' pelas credenciais reais do SGA.
         const sga = new SGAClient('https://api.hinova.com.br/api/sga/v2', 'SEU_USUARIO_SGA', 'SUA_SENHA_SGA');
@@ -1091,14 +1122,16 @@
         let currentUser = null;
         let crmUserId = null;
 
-        // 1. Auth Check
-        onAuthStateChanged(auth, async (user) => {
+        // 1. Auth Check (Sintaxe Compat)
+        auth.onAuthStateChanged(async (user) => {
             if (user) {
                 currentUser = user;
 
                 try {
-                    const q = query(collection(db, "tenants", "UNIK", "users"), where("uid", "==", user.uid));
-                    const querySnapshot = await getDocs(q);
+                    // Sintaxe V8: db.collection().where().get()
+                    const querySnapshot = await db.collection("tenants").doc("UNIK").collection("users")
+                        .where("uid", "==", user.uid)
+                        .get();
 
                     let displayName = user.displayName || 'Associado';
 
@@ -1132,14 +1165,13 @@
 
                 loadNotifications();
             } else {
-                window.location.href = 'login.html';
+                window.location.href = 'index.html'; // Corrigido para index.html (Login)
             }
         });
 
         // Exposing functions to global scope
         window.loadNotifications = loadNotifications;
         window.toggleNotifications = toggleNotifications;
-        // Função closePopup removida pois o popup foi removido
         window.openModal = openModal;
         window.closeModalClick = closeModalClick;
         window.forceClose = forceClose;
@@ -1163,17 +1195,16 @@
         }
 
 
-        // 2. Carregar Veículos
+        // 2. Carregar Veículos (Sintaxe Compat)
         async function loadVehicles(uid) {
             const list = document.querySelector('.vehicles-list');
             try {
                 list.innerHTML = '<div class="vehicle-card" style="justify-content:center; align-items:center; height:180px;"><i class="ph ph-spinner ph-spin" style="font-size:30px;"></i></div>';
 
-                const q = query(
-                    collection(db, "tenants", "UNIK", "vehicles"),
-                    where("userId", "==", uid)
-                );
-                const snap = await getDocs(q);
+                // Sintaxe V8
+                const snap = await db.collection("tenants").doc("UNIK").collection("vehicles")
+                    .where("userId", "==", uid)
+                    .get();
 
                 if (snap.empty) {
                     list.innerHTML = `
@@ -1215,7 +1246,7 @@
                     list.appendChild(card);
                 });
 
-                // Adiciona opções ao Select do Modal de Eventos (Atualizado para usar ID específico)
+                // Adiciona opções ao Select do Modal de Eventos
                 const selectVehicle = document.getElementById('eventVehicle');
                 if (selectVehicle) {
                     selectVehicle.innerHTML = '';
@@ -1234,7 +1265,7 @@
             }
         }
 
-        // 3. Enviar Evento (SOS/Sinistro) - ATUALIZADO
+        // 3. Enviar Evento (SOS/Sinistro) - ATUALIZADO (Sintaxe Compat)
         window.submitEvent = async function (e) {
             e.preventDefault();
             const btn = e.target.querySelector('button[type="submit"]');
@@ -1255,7 +1286,8 @@
                 const fileInput = document.getElementById('eventFiles');
                 const fileCount = fileInput.files ? fileInput.files.length : 0;
 
-                await addDoc(collection(db, "tenants", "UNIK", "events"), {
+                // Sintaxe V8: db.collection().add()
+                await db.collection("tenants").doc("UNIK").collection("events").add({
                     userId: auth.currentUser.uid,
                     vehicleId: vehicleId,
                     type: 'sinistro',
@@ -1266,7 +1298,7 @@
                     evidenceCount: fileCount, // Novo
                     desc: `Ocorrido em ${date}. BO: ${boNumber}. Local: ${address}`,
                     status: 'open',
-                    timestamp: serverTimestamp()
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp() // Sintaxe V8 para Timestamp
                 });
 
                 alert("Evento comunicado! Entraremos em contato.");
