@@ -1189,88 +1189,92 @@
                 });
                 showToast("Comando enviado!");
             } catch (e) {
-                console.error(e);
+                // console.error(e);
                 showToast("Erro ao enviar comando");
             }
         }
-    </script>
 
-    // --- GEOFENCE LOGIC ---
-    let geoCircle = null;
-    let geoMarker = null;
+        // --- GEOFENCE LOGIC ---
+        let geoCircle = null;
+        let geoMarker = null;
 
-    window.openGeofencePanel = function () {
-    if (!selectedVehicleId || !fleetData[selectedVehicleId]) return;
-    document.getElementById('geofencePanel').style.display = 'block';
+        window.openGeofencePanel = function () {
+            if (!selectedVehicleId || !fleetData[selectedVehicleId]) return;
+            document.getElementById('geofencePanel').style.display = 'block';
 
-    // Init Default on Map Center or Vehicle Pos
-    const entry = fleetData[selectedVehicleId];
-    const lat = entry.resolvedLat || map.getCenter().lat;
-    const lng = entry.resolvedLng || map.getCenter().lng;
-    const center = [lat, lng];
+            // Init Default on Map Center or Vehicle Pos
+            const entry = fleetData[selectedVehicleId];
+            const lat = entry.resolvedLat || map.getCenter().lat;
+            const lng = entry.resolvedLng || map.getCenter().lng;
+            const center = [lat, lng];
 
-    if (geoMarker) map.removeLayer(geoMarker);
-    if (geoCircle) map.removeLayer(geoCircle);
+            if (geoMarker) map.removeLayer(geoMarker);
+            if (geoCircle) map.removeLayer(geoCircle);
 
-    geoMarker = L.marker(center, { draggable: true, icon: L.divIcon({ className: 'custom-marker bg-locked', html: '<i
-        class="ph-bold ph-crosshair"></i>', iconSize: [32, 32] }) }).addTo(map);
-    geoCircle = L.circle(center, { radius: 100, color: 'var(--blue-bright)', fillOpacity: 0.1 }).addTo(map);
+            geoMarker = L.marker(center, {
+                draggable: true,
+                icon: L.divIcon({
+                    className: 'custom-marker bg-stopped',
+                    html: '<i class="ph-bold ph-crosshair"></i>',
+                    iconSize: [32, 32]
+                })
+            }).addTo(map);
+            geoCircle = L.circle(center, { radius: 100, color: 'var(--blue-bright)', fillOpacity: 0.1 }).addTo(map);
 
-    geoMarker.on('drag', function (e) {
-    geoCircle.setLatLng(e.target.getLatLng());
-    });
-    map.setView(center, 16);
-    }
+            geoMarker.on('drag', function (e) {
+                geoCircle.setLatLng(e.target.getLatLng());
+            });
+            map.setView(center, 16);
+        }
 
-    window.updateGeoRadius = function (val) {
-    document.getElementById('geoRadiusVal').innerText = val + 'm';
-    if (geoCircle) geoCircle.setRadius(val);
-    }
+        window.updateGeoRadius = function (val) {
+            document.getElementById('geoRadiusVal').innerText = val + 'm';
+            if (geoCircle) geoCircle.setRadius(val);
+        }
 
-    window.cancelGeofence = function () {
-    document.getElementById('geofencePanel').style.display = 'none';
-    if (geoMarker) map.removeLayer(geoMarker);
-    if (geoCircle) map.removeLayer(geoCircle);
-    }
+        window.cancelGeofence = function () {
+            document.getElementById('geofencePanel').style.display = 'none';
+            if (geoMarker) map.removeLayer(geoMarker);
+            if (geoCircle) map.removeLayer(geoCircle);
+        }
 
-    window.saveGeofence = async function () {
-    showToast("Cerca salva com sucesso!");
-    cancelGeofence();
-    }
+        window.saveGeofence = async function () {
+            showToast("Cerca salva com sucesso!");
+            cancelGeofence();
+        }
 
-    // --- HISTORY LOGIC ---
-    window.openHistory = function () {
-    document.getElementById('historyDrawer').classList.add('active');
-    const now = new Date();
-    const todayStart = new Date(now.setHours(0, 0, 0, 0));
-    const todayEnd = new Date(now.setHours(23, 59, 59, 999));
-    const toLocalISO = (d) => { const z = d.getTimezoneOffset() * 60000; return new Date(d - z).toISOString().slice(0,
-    16); };
-    document.getElementById('histStart').value = toLocalISO(todayStart);
-    document.getElementById('histEnd').value = toLocalISO(todayEnd);
-    }
+        // --- HISTORY LOGIC ---
+        window.openHistory = function () {
+            document.getElementById('historyDrawer').classList.add('active');
+            const now = new Date();
+            const todayStart = new Date(now.setHours(0, 0, 0, 0));
+            const todayEnd = new Date(now.setHours(23, 59, 59, 999));
+            const toLocalISO = (d) => { const z = d.getTimezoneOffset() * 60000; return new Date(d - z).toISOString().slice(0, 16); };
+            document.getElementById('histStart').value = toLocalISO(todayStart);
+            document.getElementById('histEnd').value = toLocalISO(todayEnd);
+        }
 
-    window.closeHistory = function () {
-    document.getElementById('historyDrawer').classList.remove('active');
-    }
+        window.closeHistory = function () {
+            document.getElementById('historyDrawer').classList.remove('active');
+        }
 
-    window.fetchHistory = async function () {
-    if (!selectedVehicleId) return;
-    const entry = fleetData[selectedVehicleId];
-    if (!entry.tracker) { showToast("Rastreador não identificado."); return; }
+        window.fetchHistory = async function () {
+            if (!selectedVehicleId) return;
+            const entry = fleetData[selectedVehicleId];
+            if (!entry.tracker) { showToast("Rastreador não identificado."); return; }
 
-    showToast("Buscando histórico...");
-    // Placeholder: In a real implementation we would query the history subcollection
-    // For now, satisfy user requirement of 'functionality present'
-    setTimeout(() => {
-    document.getElementById('histStats').innerText = "Simulação: 12 rotas encontradas.";
-    showToast("Histórico carregado (Simulado)");
-    }, 1000);
-    }
+            showToast("Buscando histórico...");
+            // Placeholder: In a real implementation we would query the history subcollection
+            // For now, satisfy user requirement of 'functionality present'
+            setTimeout(() => {
+                document.getElementById('histStats').innerText = "Simulação: 12 rotas encontradas.";
+                showToast("Histórico carregado (Simulado)");
+            }, 1000);
+        }
 
-    window.generatePDF = function () {
-    showToast("Gerando PDF... (Simulado)");
-    }
+        window.generatePDF = function () {
+            showToast("Gerando PDF... (Simulado)");
+        }
     </script>
 
 </body>

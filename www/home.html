@@ -1141,14 +1141,11 @@
                         crmUserId = userDoc.id;
                         displayName = userData.name || displayName;
 
-                        console.log("Usuário CRM encontrado:", crmUserId, userData.name);
-
                         // Fetch Boletos SGA
                         if (userData.cpf) {
                             fetchBoletosSGA(userData.cpf);
                         }
                     } else {
-                        console.warn("Usuário não encontrado na coleção 'users' do CRM. Usando UID do Auth.");
                         crmUserId = user.uid;
                     }
 
