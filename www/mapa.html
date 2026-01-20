@@ -936,11 +936,18 @@
         const urlVehicleId = urlParams.get('id');
 
         if (urlVehicleId) {
-            initSingleVehicle(urlVehicleId);
+            onAuthStateChanged(auth, user => {
+                if (user) {
+                    initSingleVehicle(urlVehicleId);
+                } else {
+                    // Store redirect? No, just go to login.
+                    window.location.href = 'index.html'; // Redirect to login if not auth
+                }
+            });
         } else {
             onAuthStateChanged(auth, user => {
                 if (user) initAllVehicles(user.uid);
-                else window.location.href = 'login.html';
+                else window.location.href = 'index.html'; // Changed to index.html to match other pages
             });
         }
 
