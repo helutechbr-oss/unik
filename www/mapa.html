@@ -985,13 +985,25 @@
 
 
         // --- SUBSCRIPTIONS ---
+        // --- SUBSCRIPTIONS ---
         function subscribeToTrackerById(trackerId, vid) {
             const unsub = onSnapshot(doc(db, "tenants", "UNIK", "trackers", trackerId), (snap) => {
-                if (snap.exists()) {
-                    const data = snap.data();
-                    if (selectedVehicleId === vid) activeImei = data.imei;
-                    processTrackerData(data, vid);
+                if (snap.exists) { // Ensure exists property is checked correctly (v8 compat usually has .exists property or method)
+                    const exists = typeof snap.exists === 'function' ? snap.exists() : snap.exists;
+                    if (exists) {
+                        const data = snap.data();
+                        if (selectedVehicleId === vid) activeImei = data.imei;
+                        processTrackerData(data, vid);
+                    } else {
+                        console.warn("Tracker doc not found:", trackerId);
+                        dismissLoading();
+                    }
+                } else {
+                    dismissLoading();
                 }
+            }, (error) => {
+                console.error("Error fetching tracker:", error);
+                dismissLoading();
             });
             unsubscribers.push(unsub);
         }
@@ -1008,11 +1020,25 @@
                     if (selectedVehicleId === vid) activeImei = cleanImei;
                     processTrackerData(data, vid);
                 } else {
+                    console.warn("Tracker by IMEI not found:", cleanImei);
                     dismissLoading();
                 }
+            }, (error) => {
+                console.error("Error fetching tracker by IMEI:", error);
+                dismissLoading();
             });
             unsubscribers.push(unsub);
         }
+
+        // Safety timeout to ensure loading screen is dismissed even if something fails
+        setTimeout(() => {
+            const loading = document.getElementById('loading');
+            if (loading && loading.style.opacity !== '0' && loading.style.display !== 'none') {
+                console.warn("Forcing loading dismissal after timeout");
+                dismissLoading();
+                showToast("Aviso: A conexão está lenta ou sem dados.");
+            }
+        }, 8000);
 
         // --- FIT ALL VEHICLES ---
         window.fitAllVehicles = function () {
