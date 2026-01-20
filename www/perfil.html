@@ -520,22 +520,40 @@
         <a href="#" class="tab-item active"><i class="ph-fill ph-user"></i><span>Perfil</span></a>
     </nav>
 
-    <script type="module">
-        import { auth, db } from './js/config.js';
-        import { signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { doc, getDoc, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    <!-- CARREGAR FIREBASE GLOBALMENTE (COMPAT MODE) -->
+    <script src="js/local_firebase/firebase-app-compat.js"></script>
+    <script src="js/local_firebase/firebase-auth-compat.js"></script>
+    <script src="js/local_firebase/firebase-firestore-compat.js"></script>
 
-        // 1. Auth Check & Data Load
-        onAuthStateChanged(auth, async (user) => {
+    <script>
+        // Inicializar Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyB1kKppCK9a5fkNv3AatAmg-7kIWewikLg",
+            authDomain: "rastreiamais-81087.firebaseapp.com",
+            projectId: "rastreiamais-81087",
+            storageBucket: "rastreiamais-81087.firebasestorage.app",
+            messagingSenderId: "804875668297",
+            appId: "1:804875668297:web:175d027f67b4faca192898",
+            measurementId: "G-QML2D91DJW"
+        };
+        if (typeof firebase !== 'undefined' && !firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        // 1. Auth Check & Data Load (Compat)
+        auth.onAuthStateChanged(async (user) => {
             if (user) {
                 // Preenche dados básicos do Auth
                 document.querySelectorAll('.data-value')[0].innerText = user.email;
 
                 // Fetch Real Name from Firestore
                 try {
-                    // Try to find user by Auth UID field in Firestore (since we saved it there)
-                    const q = query(collection(db, "tenants", "UNIK", "users"), where("uid", "==", user.uid));
-                    const querySnapshot = await getDocs(q);
+                    // Compat syntax: db.collection().where().get()
+                    const querySnapshot = await db.collection("tenants").doc("UNIK").collection("users")
+                        .where("uid", "==", user.uid)
+                        .get();
 
                     if (!querySnapshot.empty) {
                         const userData = querySnapshot.docs[0].data();
@@ -553,11 +571,10 @@
                             document.querySelectorAll('.data-value')[3].innerText = `${month.charAt(0).toUpperCase() + month.slice(1)}/${year}`;
                         }
 
-                        // Update Phone and CPF if available (assuming correct index in data-row)
+                        // Update Phone and CPF
                         if (userData.cpf) document.querySelectorAll('.data-value')[1].innerText = userData.cpf;
                         if (userData.phone) document.querySelectorAll('.data-value')[2].innerText = userData.phone;
                     } else {
-                        // Fallback if no Firestore doc linked
                         document.querySelector('.user-name').innerText = user.displayName || "Associado";
                     }
                 } catch (e) {
@@ -572,18 +589,19 @@
             }
         });
 
-        // 2. Carregar Frota
+        // 2. Carregar Frota (Compat)
         async function loadUserVehicles(uid) {
-            const container = document.querySelectorAll('.section-card')[1]; // O segundo card é "Minha Frota"
+            const container = document.querySelectorAll('.section-card')[1];
 
-            // Limpa o conteúdo atual de veículos (mantendo o header)
             const header = container.querySelector('.section-header');
             container.innerHTML = '';
             container.appendChild(header);
 
             try {
-                const q = query(collection(db, "tenants", "UNIK", "vehicles"), where("userId", "==", uid));
-                const snap = await getDocs(q);
+                // Compat syntax
+                const snap = await db.collection("tenants").doc("UNIK").collection("vehicles")
+                    .where("userId", "==", uid)
+                    .get();
 
                 if (snap.empty) {
                     container.innerHTML += '<p style="text-align:center; color:#94a3b8; font-size:13px; padding:10px;">Nenhum veículo encontrado.</p>';
@@ -608,10 +626,10 @@
             }
         }
 
-        // 3. Logout
+        // 3. Logout (Compat)
         window.logout = function () {
             if (confirm("Tem certeza que deseja sair?")) {
-                signOut(auth).then(() => {
+                auth.signOut().then(() => {
                     window.location.href = 'index.html';
                 }).catch((error) => {
                     console.error("Erro ao sair:", error);

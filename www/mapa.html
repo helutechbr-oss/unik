@@ -882,10 +882,31 @@
         </div>
     </div>
 
-    <script type="module">
-        import { auth, db } from './js/config.js';
-        import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { doc, onSnapshot, collection, query, where, getDocs, orderBy, limit, Timestamp, updateDoc, addDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    <!-- CARREGAR FIREBASE GLOBALMENTE (COMPAT MODE) -->
+    <script src="js/local_firebase/firebase-app-compat.js"></script>
+    <script src="js/local_firebase/firebase-auth-compat.js"></script>
+    <script src="js/local_firebase/firebase-firestore-compat.js"></script>
+
+    <script>
+        // Inicializar Firebase (Mesma config do index.html)
+        const firebaseConfig = {
+            apiKey: "AIzaSyB1kKppCK9a5fkNv3AatAmg-7kIWewikLg",
+            authDomain: "rastreiamais-81087.firebaseapp.com",
+            projectId: "rastreiamais-81087",
+            storageBucket: "rastreiamais-81087.firebasestorage.app",
+            messagingSenderId: "804875668297",
+            appId: "1:804875668297:web:175d027f67b4faca192898",
+            measurementId: "G-QML2D91DJW"
+        };
+
+        if (typeof firebase !== 'undefined' && !firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+
+        // Referências Globais
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+        const Timestamp = firebase.firestore.Timestamp; // Helper para compatibilidade
 
         const BACKEND_URL = 'http://35.198.58.216:3000';
 
@@ -1521,15 +1542,16 @@
             showToast("Buscando histórico...");
 
             try {
-                const histRef = collection(db, "tenants", "UNIK", "trackers", activeTrackerId, "history");
-                const q = query(
-                    histRef,
-                    where("timestamp", ">=", Timestamp.fromDate(startVal)),
-                    where("timestamp", "<=", Timestamp.fromDate(endVal)),
-                    orderBy("timestamp", "asc")
-                );
+                // Sintaxe V8: db.collection().where().orderBy().get()
+                // Nota: Firestore V8 requires Date objects for Timestamps in where clauses if not using firebase.firestore.Timestamp
+                // But it's safer to pass Date objects directly which SDK handles.
+                const snap = await db.collection("tenants").doc("UNIK")
+                    .collection("trackers").doc(activeTrackerId).collection("history")
+                    .where("timestamp", ">=", startVal)
+                    .where("timestamp", "<=", endVal)
+                    .orderBy("timestamp", "asc")
+                    .get();
 
-                const snap = await getDocs(q);
                 if (snap.empty) {
                     showToast("Nenhum dado encontrado no período.");
                     historyDataCache = [];
@@ -1565,7 +1587,7 @@
 
             } catch (err) {
                 console.error(err);
-                showToast("Erro ao buscar histórico.");
+                showToast("Erro ao buscar histórico (Índice pode ser necessário).");
             }
         };
 

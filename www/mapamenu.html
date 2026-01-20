@@ -818,12 +818,29 @@
     </div>
 
     <!-- Firebase -->
-    <script type="module">
-        import { auth, db } from './js/config.js';
-        import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { collection, query, where, getDocs, doc, onSnapshot, addDoc, Timestamp, orderBy } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    <!-- CARREGAR FIREBASE GLOBALMENTE (COMPAT MODE) -->
+    <script src="js/local_firebase/firebase-app-compat.js"></script>
+    <script src="js/local_firebase/firebase-auth-compat.js"></script>
+    <script src="js/local_firebase/firebase-firestore-compat.js"></script>
 
-        // MAP INIT
+    <script>
+        // Inicializar Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyB1kKppCK9a5fkNv3AatAmg-7kIWewikLg",
+            authDomain: "rastreiamais-81087.firebaseapp.com",
+            projectId: "rastreiamais-81087",
+            storageBucket: "rastreiamais-81087.firebasestorage.app",
+            messagingSenderId: "804875668297",
+            appId: "1:804875668297:web:175d027f67b4faca192898",
+            measurementId: "G-QML2D91DJW"
+        };
+        if (typeof firebase !== 'undefined' && !firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        // SCENE SETUP
         const map = L.map('map', { zoomControl: false, attributionControl: false }).setView([-23.5505, -46.6333], 10);
         L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
             maxZoom: 20, attribution: '&copy; OpenStreetMap'
@@ -831,15 +848,15 @@
 
         const allMarkersGroup = new L.FeatureGroup();
 
-        // ROBUST DATA STORAGE (Like mapageral)
-        let fleetData = {}; // { vid: { id, vehicle, tracker, status, lastUpdate, resolvedLat, resolvedLng } }
-        let markersMap = {}; // { vid: Marker }
+        // DATA
+        let fleetData = {};
+        let markersMap = {};
         let unsubscribers = [];
         let currentFilter = 'all';
         let selectedVehicleId = null;
         let activeImei = null;
 
-        // UI ELEMENTS
+        // UI
         const loadingEl = document.getElementById('loading');
         const listContainer = document.getElementById('listScroll');
         const countBadge = document.getElementById('vehicleCount');
@@ -847,31 +864,27 @@
         const detailView = document.getElementById('detailView');
         const addressPill = document.getElementById('uiAddressPill');
 
-        window.dismissLoading = () => loadingEl.style.opacity = '0';
-        setTimeout(() => loadingEl.style.display = 'none', 500);
+        window.dismissLoading = () => { if (loadingEl) loadingEl.style.opacity = '0'; }
+        setTimeout(() => { if (loadingEl) loadingEl.style.display = 'none'; }, 500);
 
-        // --- AUTH & USER RESOLUTION ---
-        onAuthStateChanged(auth, async (user) => {
+        // --- AUTH (Compat) ---
+        auth.onAuthStateChanged(async (user) => {
             if (user) {
-                // Mirror logic from home.html: Check for CRM User ID
                 let searchUid = user.uid;
                 try {
-                    const uQ = query(collection(db, "tenants", "UNIK", "users"), where("uid", "==", user.uid));
-                    const uSnap = await getDocs(uQ);
+                    // Check for CRM User ID
+                    const uSnap = await db.collection("tenants").doc("UNIK").collection("users")
+                        .where("uid", "==", user.uid).get();
+
                     if (!uSnap.empty) {
-                        searchUid = uSnap.docs[0].id; // Use the CRM Document ID
-                        console.log("Usando ID do CRM:", searchUid);
-                    } else {
-                        console.log("Usando Auth UID (Perfil não encontrado):", searchUid);
-                        // Fallback attempt: if no user profile, maybe vehicles are under auth uid?
+                        searchUid = uSnap.docs[0].id;
                     }
                 } catch (e) {
-                    console.error("Erro ao resolver usuario:", e);
+                    console.error("Erro user resolution:", e);
                 }
-
                 initVehicles(searchUid);
             } else {
-                window.location.href = 'login.html';
+                window.location.href = 'index.html';
             }
         });
 
@@ -884,12 +897,11 @@
         }
         window.filterList = function () { renderList(); }
 
-        // --- ROBUST FETCH ---
+        // --- FETCH (Compat) ---
         async function initVehicles(uid) {
-            console.log("Iniciando busca robusta:", uid);
             try {
-                const q = query(collection(db, "tenants", "UNIK", "vehicles"), where("userId", "==", uid));
-                const snap = await getDocs(q);
+                const snap = await db.collection("tenants").doc("UNIK").collection("vehicles")
+                    .where("userId", "==", uid).get();
 
                 if (snap.empty) {
                     dismissLoading();
@@ -901,7 +913,6 @@
                     const vid = d.id;
                     const vData = d.data();
 
-                    // Initialize Entry
                     fleetData[vid] = {
                         id: vid,
                         vehicle: vData,
@@ -913,10 +924,7 @@
 
                     if (vData.trackerId) subscribeToTracker(vData.trackerId, vid, 'id');
                     else if (vData.imei) subscribeToTracker(vData.imei, vid, 'imei');
-                    else {
-                        // Vehicle without tracker
-                        updateFleetState(vid);
-                    }
+                    else updateFleetState(vid);
                 });
                 dismissLoading();
             } catch (error) {
@@ -926,14 +934,22 @@
         }
 
         function subscribeToTracker(ident, vid, type) {
-            let q;
-            if (type === 'id') q = doc(db, "tenants", "UNIK", "trackers", ident);
-            else q = query(collection(db, "tenants", "UNIK", "trackers"), where("imei", "==", ident));
+            let ref;
+            if (type === 'id') {
+                ref = db.collection("tenants").doc("UNIK").collection("trackers").doc(ident);
+            } else {
+                // For query subscription, we need query reference
+                ref = db.collection("tenants").doc("UNIK").collection("trackers").where("imei", "==", ident);
+            }
 
-            const unsub = onSnapshot(q, (snap) => {
+            const unsub = ref.onSnapshot((snap) => {
                 let tData = null;
-                if (type === 'id' && snap.exists()) tData = snap.data();
-                else if (type !== 'id' && !snap.empty) tData = snap.docs[0].data();
+                // 'snap' is DocumentSnapshot if doc(), QuerySnapshot if where()
+                if (type === 'id') {
+                    if (snap.exists) tData = snap.data();
+                } else {
+                    if (!snap.empty) tData = snap.docs[0].data();
+                }
 
                 if (tData) {
                     fleetData[vid].tracker = tData;
@@ -943,7 +959,7 @@
             unsubscribers.push(unsub);
         }
 
-        // --- CORE STATE LOGIC (From Client Map) ---
+        // --- LOGIC ---
         function updateFleetState(vid) {
             const entry = fleetData[vid];
             const tData = entry.tracker;
@@ -954,30 +970,26 @@
                 return;
             }
 
-            // 1. Status Logic
             const now = new Date();
             let isOnline = false;
-            let lastDate = null;
-
             if (tData.lastSignal && tData.lastSignal.toDate) {
-                lastDate = tData.lastSignal.toDate();
-                const diffMin = (now - lastDate) / 60000;
-                if (diffMin < 10) isOnline = true; // 10 min tolerance like CRM
+                const lastDate = tData.lastSignal.toDate();
+                if ((now - lastDate) / 60000 < 15) isOnline = true;
+            } else if (tData.lastSignal) {
+                // Try parsing if string or other format? 
+                // Assume offline if not timestamp
             }
 
-            // Determine status
             if (!isOnline) entry.status = 'offline';
-            else if (tData.ignition || tData.speed > 0) entry.status = 'moving'; // Simple ignition check
+            else if (tData.ignition || tData.speed > 0) entry.status = 'moving';
             else entry.status = 'stopped';
 
             entry.lastUpdate = Date.now();
 
-            // 2. Coordinate Persistence (Robustness)
-            // Tenta recuperar do localStorage para evitar (0,0)
+            // LocalStorage persistence for Robustness
             const savedPos = JSON.parse(localStorage.getItem(`lastPos_${vid}`) || 'null');
             let lat = parseFloat(tData.lat);
             let lng = parseFloat(tData.lng);
-
             const isValid = !isNaN(lat) && !isNaN(lng) && lat !== 0 && lng !== 0;
 
             if (isValid) {
@@ -990,16 +1002,12 @@
             entry.resolvedLat = lat;
             entry.resolvedLng = lng;
 
-            // 3. Update Map Marker
             updateMarker(vid, entry);
-
-            // 4. Update List
             renderList();
 
-            // 5. Update Detail if open 
             if (selectedVehicleId === vid) {
                 updateDetailView(tData, entry.vehicle);
-                if (entry.status === 'moving') {
+                if (entry.status === 'moving' && isValid) {
                     centerOnVehicleWithOffset(lat, lng);
                 }
             }
@@ -1012,7 +1020,6 @@
             if (!lat || !lng) return;
 
             let marker = markersMap[vid];
-
             const getIconHtml = (status) => {
                 let colorClass = 'bg-offline';
                 if (status === 'moving') colorClass = 'bg-moving';
@@ -1033,11 +1040,6 @@
                 marker.on('click', () => selectVehicle(vid));
                 markersMap[vid] = marker;
                 allMarkersGroup.addLayer(marker);
-
-                // First load fit
-                if (!selectedVehicleId && allMarkersGroup.getLayers().length > 0) {
-                    map.fitBounds(allMarkersGroup.getBounds(), { padding: [50, 50] });
-                }
             } else {
                 marker.setLatLng([lat, lng]);
                 marker.setIcon(icon);
@@ -1050,10 +1052,7 @@
             listEl.innerHTML = '';
 
             let count = 0;
-            const sortedIds = Object.keys(fleetData).sort((a, b) => {
-                // You can add sorting logic here later
-                return 0;
-            });
+            const sortedIds = Object.keys(fleetData);
 
             sortedIds.forEach(vid => {
                 const entry = fleetData[vid];
@@ -1067,7 +1066,7 @@
                     div.className = 'vehicle-item';
                     div.id = `item-${vid}`;
 
-                    let stColor = '#64748b'; // offline
+                    let stColor = '#64748b';
                     let stText = 'OFFLINE';
                     if (entry.status === 'moving') { stColor = '#10b981'; stText = 'MOVENDO'; }
                     if (entry.status === 'stopped') { stColor = '#f59e0b'; stText = 'PARADO'; }
@@ -1102,14 +1101,12 @@
             const entry = fleetData[vid];
             if (!entry) return;
 
-            // Switch to Detail View
             listView.style.display = 'none';
             detailView.style.display = 'flex';
             addressPill.style.display = 'flex';
 
             updateDetailView(entry.tracker, entry.vehicle);
 
-            // Center
             if (entry.resolvedLat && entry.resolvedLng) {
                 centerOnVehicleWithOffset(entry.resolvedLat, entry.resolvedLng);
             }
@@ -1171,92 +1168,109 @@
             document.getElementById('uiLockIcon').className = isBlocked ? 'ph-bold ph-lock-key' : 'ph-bold ph-lock-key-open';
             document.getElementById('uiLockIcon').style.color = isBlocked ? 'var(--danger)' : 'var(--success)';
 
-            const cmdRow = document.getElementById('commandSection');
-            cmdRow.style.display = 'flex';
+            document.getElementById('commandSection').style.display = 'flex';
             activeImei = data.imei;
         }
 
         window.confirmCommand = async (type) => {
             if (!activeImei) return showToast("Erro: IMEI não encontrado");
             if (type === 'block' && !confirm("ATENÇÃO: Bloquear veículo?")) return;
-            showToast("Comando enviado!");
-            // Implementation of command sending would go here
+            showToast("Enviando comando...");
+
+            try {
+                // Compat AddDoc
+                await db.collection("tenants").doc("UNIK").collection("commands").add({
+                    imei: activeImei,
+                    commandType: type,
+                    status: 'pending',
+                    requestTime: firebase.firestore.FieldValue.serverTimestamp(),
+                    origin: 'web_app',
+                    user: auth.currentUser ? auth.currentUser.email : 'anonymous'
+                });
+                showToast("Comando enviado!");
+            } catch (e) {
+                console.error(e);
+                showToast("Erro ao enviar comando");
+            }
         }
+    </script>
 
-        // --- GEOFENCE LOGIC ---
-        let geoCircle = null;
-        let geoMarker = null;
+    // --- GEOFENCE LOGIC ---
+    let geoCircle = null;
+    let geoMarker = null;
 
-        window.openGeofencePanel = function () {
-            if (!selectedVehicleId || !fleetData[selectedVehicleId]) return;
-            document.getElementById('geofencePanel').style.display = 'block';
+    window.openGeofencePanel = function () {
+    if (!selectedVehicleId || !fleetData[selectedVehicleId]) return;
+    document.getElementById('geofencePanel').style.display = 'block';
 
-            // Init Default on Map Center or Vehicle Pos
-            const entry = fleetData[selectedVehicleId];
-            const lat = entry.resolvedLat || map.getCenter().lat;
-            const lng = entry.resolvedLng || map.getCenter().lng;
-            const center = [lat, lng];
+    // Init Default on Map Center or Vehicle Pos
+    const entry = fleetData[selectedVehicleId];
+    const lat = entry.resolvedLat || map.getCenter().lat;
+    const lng = entry.resolvedLng || map.getCenter().lng;
+    const center = [lat, lng];
 
-            if (geoMarker) map.removeLayer(geoMarker);
-            if (geoCircle) map.removeLayer(geoCircle);
+    if (geoMarker) map.removeLayer(geoMarker);
+    if (geoCircle) map.removeLayer(geoCircle);
 
-            geoMarker = L.marker(center, { draggable: true, icon: L.divIcon({ className: 'custom-marker bg-locked', html: '<i class="ph-bold ph-crosshair"></i>', iconSize: [32, 32] }) }).addTo(map);
-            geoCircle = L.circle(center, { radius: 100, color: 'var(--blue-bright)', fillOpacity: 0.1 }).addTo(map);
+    geoMarker = L.marker(center, { draggable: true, icon: L.divIcon({ className: 'custom-marker bg-locked', html: '<i
+        class="ph-bold ph-crosshair"></i>', iconSize: [32, 32] }) }).addTo(map);
+    geoCircle = L.circle(center, { radius: 100, color: 'var(--blue-bright)', fillOpacity: 0.1 }).addTo(map);
 
-            geoMarker.on('drag', function (e) {
-                geoCircle.setLatLng(e.target.getLatLng());
-            });
-            map.setView(center, 16);
-        }
+    geoMarker.on('drag', function (e) {
+    geoCircle.setLatLng(e.target.getLatLng());
+    });
+    map.setView(center, 16);
+    }
 
-        window.updateGeoRadius = function (val) {
-            document.getElementById('geoRadiusVal').innerText = val + 'm';
-            if (geoCircle) geoCircle.setRadius(val);
-        }
+    window.updateGeoRadius = function (val) {
+    document.getElementById('geoRadiusVal').innerText = val + 'm';
+    if (geoCircle) geoCircle.setRadius(val);
+    }
 
-        window.cancelGeofence = function () {
-            document.getElementById('geofencePanel').style.display = 'none';
-            if (geoMarker) map.removeLayer(geoMarker);
-            if (geoCircle) map.removeLayer(geoCircle);
-        }
+    window.cancelGeofence = function () {
+    document.getElementById('geofencePanel').style.display = 'none';
+    if (geoMarker) map.removeLayer(geoMarker);
+    if (geoCircle) map.removeLayer(geoCircle);
+    }
 
-        window.saveGeofence = async function () {
-            showToast("Cerca salva com sucesso!");
-            cancelGeofence();
-        }
+    window.saveGeofence = async function () {
+    showToast("Cerca salva com sucesso!");
+    cancelGeofence();
+    }
 
-        // --- HISTORY LOGIC ---
-        window.openHistory = function () {
-            document.getElementById('historyDrawer').classList.add('active');
-            const now = new Date();
-            const todayStart = new Date(now.setHours(0, 0, 0, 0));
-            const todayEnd = new Date(now.setHours(23, 59, 59, 999));
-            const toLocalISO = (d) => { const z = d.getTimezoneOffset() * 60000; return new Date(d - z).toISOString().slice(0, 16); };
-            document.getElementById('histStart').value = toLocalISO(todayStart);
-            document.getElementById('histEnd').value = toLocalISO(todayEnd);
-        }
+    // --- HISTORY LOGIC ---
+    window.openHistory = function () {
+    document.getElementById('historyDrawer').classList.add('active');
+    const now = new Date();
+    const todayStart = new Date(now.setHours(0, 0, 0, 0));
+    const todayEnd = new Date(now.setHours(23, 59, 59, 999));
+    const toLocalISO = (d) => { const z = d.getTimezoneOffset() * 60000; return new Date(d - z).toISOString().slice(0,
+    16); };
+    document.getElementById('histStart').value = toLocalISO(todayStart);
+    document.getElementById('histEnd').value = toLocalISO(todayEnd);
+    }
 
-        window.closeHistory = function () {
-            document.getElementById('historyDrawer').classList.remove('active');
-        }
+    window.closeHistory = function () {
+    document.getElementById('historyDrawer').classList.remove('active');
+    }
 
-        window.fetchHistory = async function () {
-            if (!selectedVehicleId) return;
-            const entry = fleetData[selectedVehicleId];
-            if (!entry.tracker) { showToast("Rastreador não identificado."); return; }
+    window.fetchHistory = async function () {
+    if (!selectedVehicleId) return;
+    const entry = fleetData[selectedVehicleId];
+    if (!entry.tracker) { showToast("Rastreador não identificado."); return; }
 
-            showToast("Buscando histórico...");
-            // Placeholder: In a real implementation we would query the history subcollection
-            // For now, satisfy user requirement of 'functionality present' 
-            setTimeout(() => {
-                document.getElementById('histStats').innerText = "Simulação: 12 rotas encontradas.";
-                showToast("Histórico carregado (Simulado)");
-            }, 1000);
-        }
+    showToast("Buscando histórico...");
+    // Placeholder: In a real implementation we would query the history subcollection
+    // For now, satisfy user requirement of 'functionality present'
+    setTimeout(() => {
+    document.getElementById('histStats').innerText = "Simulação: 12 rotas encontradas.";
+    showToast("Histórico carregado (Simulado)");
+    }, 1000);
+    }
 
-        window.generatePDF = function () {
-            showToast("Gerando PDF... (Simulado)");
-        }
+    window.generatePDF = function () {
+    showToast("Gerando PDF... (Simulado)");
+    }
     </script>
 
 </body>
