@@ -626,13 +626,19 @@
             }
         }
 
-        // 3. Logout (Compat)
+        // 3. Logout (Robust)
         window.logout = function () {
             if (confirm("Tem certeza que deseja sair?")) {
+                // Remove local persistence flag if any (though Firebase handles this)
+                localStorage.removeItem('lastPos');
+
                 auth.signOut().then(() => {
+                    console.log("Logout successful");
                     window.location.href = 'index.html';
                 }).catch((error) => {
                     console.error("Erro ao sair:", error);
+                    // Force redirect anyway
+                    window.location.href = 'index.html';
                 });
             }
         }

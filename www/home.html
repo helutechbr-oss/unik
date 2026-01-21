@@ -1192,16 +1192,23 @@
         }
 
 
-        // 2. Carregar Veículos (Sintaxe Compat)
-        async function loadVehicles(uid) {
+        // 2. Carregar Veículos (Robust Function)
+        function loadVehicles(uid) {
             const list = document.querySelector('.vehicles-list');
-            try {
-                list.innerHTML = '<div class="vehicle-card" style="justify-content:center; align-items:center; height:180px;"><i class="ph ph-spinner ph-spin" style="font-size:30px;"></i></div>';
+            list.innerHTML = '<div class="vehicle-card" style="justify-content:center; align-items:center; height:180px;"><i class="ph ph-spinner ph-spin" style="font-size:30px;"></i></div>';
 
-                // Sintaxe V8
-                const snap = await db.collection("tenants").doc("UNIK").collection("vehicles")
-                    .where("userId", "==", uid)
-                    .get();
+            const vehiclesRef = db.collection("tenants").doc("UNIK").collection("vehicles").where("userId", "==", uid);
+
+            // Timeout safety (5 seconds)
+            const safetyTimeout = setTimeout(() => {
+                if (list.innerHTML.includes('ph-spinner')) {
+                    list.innerHTML = '<div class="vehicle-card" style="padding:20px; text-align:center;"><p style="color:red;">Tempo limite excedido. Verifique sua conexão.</p></div>';
+                }
+            }, 8000);
+
+            // Using onSnapshot for better reliability and realtime updates
+            vehiclesRef.onSnapshot((snap) => {
+                clearTimeout(safetyTimeout);
 
                 if (snap.empty) {
                     list.innerHTML = `
@@ -1211,25 +1218,47 @@
                             <p style="font-size:12px;">Entre em contato para ativar.</p>
                         </div>
                     `;
+                    populateSelect([]); // Clear select
                     return;
                 }
 
                 list.innerHTML = '';
+                const vehiclesForSelect = [];
+
                 snap.forEach(doc => {
                     const car = doc.data();
+                    vehiclesForSelect.push({ id: doc.id, ...car });
+
                     const card = document.createElement('div');
                     card.className = 'vehicle-card';
+                    // Determine Status Color
+                    let statusColor = '#dcfce7'; // green
+                    let statusText = 'Protegido';
+                    let statusIcon = 'ph-shield-check';
+                    let txtColor = '#166534';
+
+                    if (car.status === 'blocked') {
+                        statusColor = '#fee2e2';
+                        statusText = 'Bloqueado';
+                        statusIcon = 'ph-lock-key';
+                        txtColor = '#b91c1c';
+                    } else if (car.status === 'pending') {
+                        statusColor = '#fef9c3';
+                        statusText = 'Pendente';
+                        statusIcon = 'ph-clock';
+                        txtColor = '#854d0e';
+                    }
+
                     card.innerHTML = `
                         <div class="vehicle-header">
                             <div class="vehicle-info">
                                 <h3>${car.model || 'Veículo'}</h3>
                                 <p>${car.plate || 'SEM-PLACA'} &bull; ${car.year || '----'}</p>
                             </div>
-                            <span class="status-badge" style="${car.status === 'blocked' ? 'background:#fee2e2; color:#b91c1c;' : ''}">
-                                <i class="ph-fill ${car.status === 'blocked' ? 'ph-lock-key' : 'ph-shield-check'}"></i> 
-                                ${car.status === 'blocked' ? 'Bloqueado' : 'Protegido'}
+                            <span class="status-badge" style="background:${statusColor}; color:${txtColor};">
+                                <i class="ph-fill ${statusIcon}"></i> 
+                                ${statusText}
                             </span>
-                            ${car.hasBlocker ? `<span class="status-badge" style="background:#fee2e2; color:#991b1b; margin-left:8px;"><i class="ph-fill ph-lock-key"></i> BLOQUEADOR</span>` : ''}
                         </div>
                         <div class="location-row" style="margin-bottom: 12px;">
                             <i class="ph-fill ph-map-pin loc-icon"></i>
@@ -1243,22 +1272,36 @@
                     list.appendChild(card);
                 });
 
-                // Adiciona opções ao Select do Modal de Eventos
-                const selectVehicle = document.getElementById('eventVehicle');
-                if (selectVehicle) {
-                    selectVehicle.innerHTML = '';
-                    snap.forEach(doc => {
-                        const car = doc.data();
-                        const opt = document.createElement('option');
-                        opt.value = doc.id;
-                        opt.innerText = `${car.model} (${car.plate})`;
-                        selectVehicle.appendChild(opt);
-                    });
-                }
+                populateSelect(vehiclesForSelect);
 
-            } catch (e) {
-                console.error("Erro ao carregar veículos:", e);
-                list.innerHTML = '<p style="padding:20px; color:red;">Erro ao carregar veículos.</p>';
+            }, (error) => {
+                clearTimeout(safetyTimeout);
+                console.error("Erro ao carregar veículos (onSnapshot):", error);
+
+                // Show a retry button or clear error message
+                list.innerHTML = `
+                    <div class="vehicle-card" style="padding:20px; text-align:center;">
+                        <p style="color:red; margin-bottom:10px;">Erro ao carregar veículos.</p>
+                        <button onclick="window.location.reload()" style="padding:8px 16px; border-radius:8px; border:none; background:#0f172a; color:white;">Tentar Novamente</button>
+                    </div>
+                `;
+            });
+        }
+
+        function populateSelect(vehicles) {
+            const selectVehicle = document.getElementById('eventVehicle');
+            if (selectVehicle) {
+                selectVehicle.innerHTML = '';
+                if (vehicles.length === 0) {
+                    selectVehicle.innerHTML = '<option>Nenhum veículo</option>';
+                    return;
+                }
+                vehicles.forEach(car => {
+                    const opt = document.createElement('option');
+                    opt.value = car.id;
+                    opt.innerText = `${car.model || 'Veículo'} (${car.plate || '---'})`;
+                    selectVehicle.appendChild(opt);
+                });
             }
         }
 
