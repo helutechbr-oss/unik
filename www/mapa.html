@@ -945,9 +945,9 @@
                 }
             });
         } else {
-            onAuthStateChanged(auth, user => {
+            auth.onAuthStateChanged(user => {
                 if (user) initAllVehicles(user.uid);
-                else window.location.href = 'index.html'; // Changed to index.html to match other pages
+                else window.location.href = 'index.html';
             });
         }
 
@@ -956,16 +956,19 @@
         }
 
         async function initAllVehicles(uid) {
-            const q = query(collection(db, "tenants", "UNIK", "vehicles"), where("userId", "==", uid));
-            const snap = await getDocs(q);
-            if (snap.empty) { dismissLoading(); showToast("Nenhum veículo encontrado."); return; }
-
-            snap.forEach(d => setupVehicleListener(d.id, false));
+            try {
+                const snap = await db.collection("tenants").doc("UNIK").collection("vehicles").where("userId", "==", uid).get();
+                if (snap.empty) { dismissLoading(); showToast("Nenhum veículo encontrado."); return; }
+                snap.forEach(d => setupVehicleListener(d.id, false));
+            } catch (e) {
+                console.error(e);
+                dismissLoading();
+            }
         }
 
         function setupVehicleListener(vid, autoFocus) {
-            const unsub = onSnapshot(doc(db, "tenants", "UNIK", "vehicles", vid), (docSnap) => {
-                if (!docSnap.exists()) return;
+            const unsub = db.collection("tenants").doc("UNIK").collection("vehicles").doc(vid).onSnapshot((docSnap) => {
+                if (!docSnap.exists) return; // v8 property
                 const vData = docSnap.data();
                 vehicleDataCache[vid] = vData;
 
@@ -994,22 +997,17 @@
         // --- SUBSCRIPTIONS ---
         // --- SUBSCRIPTIONS ---
         function subscribeToTrackerById(trackerId, vid) {
-            const unsub = onSnapshot(doc(db, "tenants", "UNIK", "trackers", trackerId), (snap) => {
-                if (snap.exists) { // Ensure exists property is checked correctly (v8 compat usually has .exists property or method)
-                    const exists = typeof snap.exists === 'function' ? snap.exists() : snap.exists;
-                    if (exists) {
-                        const data = snap.data();
-                        if (selectedVehicleId === vid) activeImei = data.imei;
-                        processTrackerData(data, vid);
-                    } else {
-                        console.warn("Tracker doc not found:", trackerId);
-                        dismissLoading();
-                    }
+            const unsub = db.collection("tenants").doc("UNIK").collection("trackers").doc(trackerId).onSnapshot((snap) => {
+                if (snap.exists) {
+                    const data = snap.data();
+                    if (selectedVehicleId === vid) activeImei = data.imei;
+                    processTrackerData(data, vid);
                 } else {
+                    // console.warn("Tracker doc not found:", trackerId);
                     dismissLoading();
                 }
             }, (error) => {
-                console.error("Error fetching tracker:", error);
+                // console.error("Error fetching tracker:", error);
                 dismissLoading();
             });
             unsubscribers.push(unsub);
@@ -1017,8 +1015,7 @@
 
         function subscribeToTrackerByImei(imei, vid) {
             const cleanImei = String(imei).trim();
-            const q = query(collection(db, "tenants", "UNIK", "trackers"), where("imei", "==", cleanImei));
-            const unsub = onSnapshot(q, (snap) => {
+            const unsub = db.collection("tenants").doc("UNIK").collection("trackers").where("imei", "==", cleanImei).onSnapshot((snap) => {
                 if (!snap.empty) {
                     const docT = snap.docs[0];
                     const data = docT.data();
@@ -1027,11 +1024,11 @@
                     if (selectedVehicleId === vid) activeImei = cleanImei;
                     processTrackerData(data, vid);
                 } else {
-                    console.warn("Tracker by IMEI not found:", cleanImei);
+                    // console.warn("Tracker by IMEI not found:", cleanImei);
                     dismissLoading();
                 }
             }, (error) => {
-                console.error("Error fetching tracker by IMEI:", error);
+                // console.error("Error fetching tracker by IMEI:", error);
                 dismissLoading();
             });
             unsubscribers.push(unsub);
