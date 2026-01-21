@@ -380,9 +380,11 @@
                 <img src="https://ui-avatars.com/api/?name=User&background=0f172a&color=D4AF37&size=200"
                     alt="Foto Perfil" id="profileImg">
             </div>
-            <div class="badge-edit" onclick="alert('Alterar foto...')">
-                <i class="ph-bold ph-pencil-simple"></i>
+            <div class="badge-edit" onclick="document.getElementById('profileUpload').click()">
+                <i class="ph-bold ph-camera"></i>
             </div>
+            <input type="file" id="profileUpload" accept="image/*" style="display: none;"
+                onchange="uploadProfilePhoto(this)">
         </div>
         <h2 class="user-name">Carregando...</h2>
         <span class="user-status"><i class="ph-fill ph-star"></i> Associado Ouro</span>
@@ -524,6 +526,7 @@
     <script src="js/local_firebase/firebase-app-compat.js"></script>
     <script src="js/local_firebase/firebase-auth-compat.js"></script>
     <script src="js/local_firebase/firebase-firestore-compat.js"></script>
+    <script src="js/local_firebase/firebase-storage-compat.js"></script>
 
     <script>
         // Inicializar Firebase
@@ -541,6 +544,7 @@
         }
         const auth = firebase.auth();
         const db = firebase.firestore();
+        const storage = firebase.storage();
 
         // 1. Auth Check & Data Load (Compat)
         auth.onAuthStateChanged(async (user) => {
@@ -556,12 +560,17 @@
                         .get();
 
                     if (!querySnapshot.empty) {
-                        const userData = querySnapshot.docs[0].data();
+                        const userDoc = querySnapshot.docs[0];
+                        const userData = userDoc.data();
                         document.querySelector('.user-name').innerText = userData.name || user.displayName || "Associado";
 
                         // Update Avatar
-                        const uName = userData.name || user.displayName || "User";
-                        document.getElementById('profileImg').src = `https://ui-avatars.com/api/?name=${encodeURIComponent(uName)}&background=0f172a&color=D4AF37&size=200`;
+                        if (userData.photoUrl) {
+                            document.getElementById('profileImg').src = userData.photoUrl;
+                        } else {
+                            const uName = userData.name || user.displayName || "User";
+                            document.getElementById('profileImg').src = `https://ui-avatars.com/api/?name=${encodeURIComponent(uName)}&background=0f172a&color=D4AF37&size=200`;
+                        }
 
                         // Update Member Since if available
                         if (userData.createdAt) {
@@ -589,7 +598,59 @@
             }
         });
 
-        // 2. Carregar Frota (Compat)
+        // 2. Upload Photo (New Feature)
+        window.uploadProfilePhoto = async function (input) {
+            const file = input.files[0];
+            if (!file) return;
+
+            const user = auth.currentUser;
+            if (!user) return;
+
+            const imgEl = document.getElementById('profileImg');
+            // Optimistic update (show loading or blur)
+            imgEl.style.opacity = '0.5';
+
+            try {
+                // 1. Upload to Storage: users/{uid}/profile.jpg
+                // Add timestamp to avoid caching issues
+                const path = `users/${user.uid}/profile_${Date.now()}.jpg`;
+                const ref = storage.ref().child(path);
+
+                await ref.put(file);
+                const downloadURL = await ref.getDownloadURL();
+
+                // 2. Update Firestore
+                const querySnapshot = await db.collection("tenants").doc("UNIK").collection("users")
+                    .where("uid", "==", user.uid)
+                    .get();
+
+                if (!querySnapshot.empty) {
+                    const docId = querySnapshot.docs[0].id;
+                    await db.collection("tenants").doc("UNIK").collection("users").doc(docId).update({
+                        photoUrl: downloadURL
+                    });
+                } else {
+                    // Create if not exists (fallback)
+                    await db.collection("tenants").doc("UNIK").collection("users").add({
+                        uid: user.uid,
+                        email: user.email,
+                        photoUrl: downloadURL
+                    });
+                }
+
+                // 3. Update UI
+                imgEl.src = downloadURL;
+                imgEl.style.opacity = '1';
+                alert("Foto de perfil atualizada!");
+
+            } catch (error) {
+                console.error("Erro no upload:", error);
+                alert("Erro ao enviar foto. Tente novamente.");
+                imgEl.style.opacity = '1';
+            }
+        }
+
+        // 3. Carregar Frota (Compat)
         async function loadUserVehicles(uid) {
             const container = document.querySelectorAll('.section-card')[1];
 

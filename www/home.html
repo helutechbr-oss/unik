@@ -891,8 +891,8 @@
     <header class="header">
         <div class="header-top">
             <div class="user-info">
-                <h2>Olá, Carlos</h2>
-                <p>Plano Ouro &bull; Ativo</p>
+                <h2 id="headerUserName">Olá, Associado</h2>
+                <p id="headerUserPlan">Carregando status...</p>
             </div>
             <button class="icon-btn" onclick="toggleNotifications()">
                 <i class="ph ph-bell"></i>
@@ -1149,14 +1149,16 @@
                         crmUserId = user.uid;
                     }
 
-                    document.querySelector('.user-info h2').innerText = `Olá, ${displayName}`;
+                    document.getElementById('headerUserName').innerText = `Olá, ${displayName}`;
+                    document.getElementById('headerUserPlan').innerText = "Plano Ativo"; // Could be dynamic if data exists
 
                     // Carrega Veículos usando o ID do CRM
                     loadVehicles(crmUserId);
 
                 } catch (err) {
                     console.error("Erro ao buscar perfil do usuário:", err);
-                    document.querySelector('.user-info h2').innerText = `Olá, ${user.displayName || 'Associado'}`;
+                    document.getElementById('headerUserName').innerText = `Olá, ${user.displayName || 'Associado'}`;
+                    document.getElementById('headerUserPlan').innerText = "Plano Ativo";
                     loadVehicles(user.uid);
                 }
 
