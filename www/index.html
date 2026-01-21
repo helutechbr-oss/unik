@@ -370,8 +370,7 @@
         // Check auth status on load to redirect if already logged in (cleanup)
         auth.onAuthStateChanged(user => {
             if (user) {
-                // Optional: Auto redirect if session is valid?
-                // window.location.href = 'home.html';
+                window.location.href = 'home.html';
             }
         });
 
