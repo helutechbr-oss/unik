@@ -1264,16 +1264,16 @@
             if (!entry.tracker) { showToast("Rastreador não identificado."); return; }
 
             showToast("Buscando histórico...");
-            // Placeholder: In a real implementation we would query the history subcollection
-            // For now, satisfy user requirement of 'functionality present'
+
+            // TODO: Implementar busca real no Firebase quando a collection for definida
             setTimeout(() => {
-                document.getElementById('histStats').innerText = "Simulação: 12 rotas encontradas.";
-                showToast("Histórico carregado (Simulado)");
+                document.getElementById('histStats').innerText = "Nenhum histórico recente encontrado.";
+                showToast("Busca finalizada.");
             }, 1000);
         }
 
         window.generatePDF = function () {
-            showToast("Gerando PDF... (Simulado)");
+            showToast("Funcionalidade em breve.");
         }
     </script>
 

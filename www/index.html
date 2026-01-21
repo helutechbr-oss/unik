@@ -15,26 +15,7 @@
     <meta name="theme-color" content="#0f172a">
     <title>Minha Proteção</title>
 
-    <!-- CRITICAL DEBUGGING SCRIPT -->
-    <script>
-        window.onerror = function (msg, url, line) {
-            alert("ERRO CRITICO:\n" + msg + "\nLinha: " + line);
-            var log = document.getElementById('debug-log');
-            if (log) log.innerHTML += "<div>ERRO: " + msg + " (L" + line + ")</div>";
-        };
-        window.addEventListener('unhandledrejection', function (event) {
-            alert("ERRO PROMISE:\n" + event.reason);
-            var log = document.getElementById('debug-log');
-            if (log) log.innerHTML += "<div>REJEITADO: " + event.reason + "</div>";
-        });
-        console.log = (function (old_function) {
-            return function (text) {
-                old_function(text);
-                var log = document.getElementById('debug-log');
-                if (log) log.innerHTML += "<div>LOG: " + text + "</div>";
-            };
-        }(console.log));
-    </script>
+    <!-- SCRIPTS REMOVIDOS -->
 
     <link
         href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@500;600;700&display=swap"
@@ -343,10 +324,6 @@
         </div>
     </div>
 
-    <div id="debug-log"
-        style="position:fixed; top:0; left:0; width:100%; height:150px; background:rgba(0,0,0,0.8); color:#0f0; overflow:scroll; z-index:9999; font-size:10px; display:none;">
-        DEBUG MODE ON<br>
-    </div>
 
     <div class="footer">
         <span>Monitoramento 24h</span>
@@ -371,8 +348,7 @@
 
         try {
             firebase.initializeApp(firebaseConfig);
-            console.log("Firebase Global Iniciado!");
-        } catch (e) { console.log("Firebase já iniciado"); }
+        } catch (e) { }
 
         const auth = firebase.auth();
 
@@ -383,10 +359,6 @@
 
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
-
-            // Debug Debug
-            document.getElementById('debug-log').style.display = 'block';
-            console.log("Botão clicado! Iniciando login (Compat)...");
 
             // Animação do botão
             const originalText = btnLogin.innerHTML;
@@ -410,7 +382,6 @@
                 }, 800);
 
             } catch (error) {
-                console.error("Erro Login:", error);
 
                 // Tratamento de Erros
                 let msg = "Erro ao fazer login.";
@@ -425,10 +396,6 @@
                 errorText.innerText = msg;
                 errorDisplay.style.display = 'flex';
 
-                // Log visual para debug
-                const log = document.getElementById('debug-log');
-                if (log) log.innerHTML += "<div>ERRO: " + error.code + "</div>";
-
                 btnLogin.innerHTML = originalText;
                 btnLogin.disabled = false;
                 btnLogin.style.background = ''; // Reseta cor
@@ -439,8 +406,8 @@
     <script>
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('./service-worker.js')
-                .then(() => console.log('Service Worker registrado com sucesso!'))
-                .catch((error) => console.log('Falha ao registrar SW:', error));
+                .then(() => { }) // Silent success
+                .catch((error) => { }); // Silent error
         }
     </script>
 </body>
