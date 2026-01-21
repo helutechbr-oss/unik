@@ -313,13 +313,22 @@
                 </div>
             </div>
 
+            <div style="display: flex; align-items: center; margin-bottom: 18px;">
+                <label
+                    style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 13px; color: var(--navy-dark); font-weight: 500;">
+                    <input type="checkbox" id="rememberMe" checked
+                        style="width: 18px; height: 18px; margin: 0; border: 2px solid #e2e8f0; border-radius: 4px; accent-color: var(--navy-dark);">
+                    Manter conectado
+                </label>
+            </div>
+
             <button type="submit" class="btn-primary" id="btnLogin">
                 Rastrear Agora
             </button>
         </form>
 
         <div class="help-links">
-            <a href="#">Esqueci minha senha</a>
+            <a href="#" id="btnForgot">Esqueci minha senha</a>
             <a href="#" class="highlight">Preciso de ajuda</a>
         </div>
     </div>
@@ -354,8 +363,49 @@
 
         const form = document.getElementById('loginForm');
         const btnLogin = document.getElementById('btnLogin');
+        const btnForgot = document.getElementById('btnForgot');
         const errorDisplay = document.getElementById('errorDisplay');
         const errorText = document.getElementById('errorText');
+
+        // Check auth status on load to redirect if already logged in (cleanup)
+        auth.onAuthStateChanged(user => {
+            if (user) {
+                // Optional: Auto redirect if session is valid?
+                // window.location.href = 'home.html';
+            }
+        });
+
+        // Forgot Password Logic
+        btnForgot.addEventListener('click', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            if (!email) {
+                showError("Digite seu e-mail acima para recuperar a senha.");
+                document.getElementById('email').focus();
+                return;
+            }
+
+            const originalText = btnForgot.innerText;
+            btnForgot.innerText = "Enviando...";
+
+            try {
+                await auth.sendPasswordResetEmail(email);
+                alert(`E-mail de recuperação enviado para: ${email}\nVerifique sua caixa de entrada.`);
+                btnForgot.innerText = "E-mail enviado!";
+            } catch (error) {
+                console.error(error);
+                let msg = "Erro ao enviar e-mail.";
+                if (error.code === 'auth/user-not-found') msg = "E-mail não cadastrado.";
+                if (error.code === 'auth/invalid-email') msg = "E-mail inválido.";
+                showError(msg);
+                btnForgot.innerText = originalText;
+            }
+        });
+
+        function showError(msg) {
+            errorText.innerText = msg;
+            errorDisplay.style.display = 'flex';
+        }
 
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -368,8 +418,16 @@
 
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
+            const rememberMe = document.getElementById('rememberMe').checked;
 
             try {
+                // Set Persistence
+                const persistence = rememberMe
+                    ? firebase.auth.Auth.Persistence.LOCAL
+                    : firebase.auth.Auth.Persistence.SESSION;
+
+                await auth.setPersistence(persistence);
+
                 // Login Real (Sintaxe Compat)
                 await auth.signInWithEmailAndPassword(email, password);
 
@@ -393,8 +451,7 @@
                     msg = "Verifique sua internet.";
                 }
 
-                errorText.innerText = msg;
-                errorDisplay.style.display = 'flex';
+                showError(msg);
 
                 btnLogin.innerHTML = originalText;
                 btnLogin.disabled = false;
