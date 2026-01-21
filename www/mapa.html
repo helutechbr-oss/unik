@@ -936,12 +936,11 @@
         const urlVehicleId = urlParams.get('id');
 
         if (urlVehicleId) {
-            onAuthStateChanged(auth, user => {
+            auth.onAuthStateChanged(user => {
                 if (user) {
                     initSingleVehicle(urlVehicleId);
                 } else {
-                    // Store redirect? No, just go to login.
-                    window.location.href = 'index.html'; // Redirect to login if not auth
+                    window.location.href = 'index.html';
                 }
             });
         } else {
@@ -1528,11 +1527,11 @@
             showToast("Enviando comando...");
 
             try {
-                await addDoc(collection(db, "tenants", "UNIK", "commands"), {
+                await db.collection("tenants").doc("UNIK").collection("commands").add({
                     imei: activeImei,
                     commandType: type,
                     status: 'pending',
-                    requestTime: Timestamp.now(),
+                    requestTime: firebase.firestore.FieldValue.serverTimestamp(),
                     origin: 'web_app',
                     user: auth.currentUser ? auth.currentUser.email : 'anonymous'
                 });
