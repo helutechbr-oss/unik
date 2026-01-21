@@ -16,6 +16,7 @@
     "@capacitor/cli": "^8.0.1",
     "@capacitor/core": "^8.0.1",
     "@capacitor/ios": "^8.0.1",
-    "firebase": "^12.8.0"
+    "firebase": "^12.8.0",
+    "puppeteer": "^24.35.0"
   }
 }
