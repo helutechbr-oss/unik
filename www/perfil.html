@@ -552,6 +552,20 @@
                 // Preenche dados básicos do Auth
                 document.querySelectorAll('.data-value')[0].innerText = user.email;
 
+                // Safety Timeout: If Firestore takes too long, remove "Carregando..."
+                setTimeout(() => {
+                    const nameEl = document.querySelector('.user-name');
+                    if (nameEl && nameEl.innerText.includes("Carregando")) {
+                        console.warn("Firestore profile fetch timed out. Using fallback.");
+                        nameEl.innerText = user.displayName || "Associado";
+                        // Also set default avatar if still loading
+                        if (document.getElementById('profileImg').src.includes("ui-avatars") && document.getElementById('profileImg').src.includes("User")) {
+                            const uName = user.displayName || "Associado";
+                            document.getElementById('profileImg').src = `https://ui-avatars.com/api/?name=${encodeURIComponent(uName)}&background=0f172a&color=D4AF37&size=200`;
+                        }
+                    }
+                }, 4000);
+
                 // Fetch Real Name from Firestore
                 try {
                     // Compat syntax: db.collection().where().get()
