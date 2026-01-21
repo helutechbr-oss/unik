@@ -1204,7 +1204,7 @@
                 if (list.innerHTML.includes('ph-spinner')) {
                     list.innerHTML = '<div class="vehicle-card" style="padding:20px; text-align:center;"><p style="color:red;">Tempo limite excedido. Verifique sua conexão.</p></div>';
                 }
-            }, 8000);
+            }, 5000);
 
             // Using onSnapshot for better reliability and realtime updates
             vehiclesRef.onSnapshot((snap) => {
