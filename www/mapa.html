@@ -1339,7 +1339,7 @@
         }
 
         function removeGeofence() {
-            updateDoc(doc(db, "tenants", "UNIK", "vehicles", selectedVehicleId), { geofence: null })
+            db.collection("tenants").doc("UNIK").collection("vehicles").doc(selectedVehicleId).update({ geofence: null })
                 .then(() => {
                     showToast("Cerca removida.");
                 })
@@ -1413,7 +1413,7 @@
                 radius: radius
             };
 
-            updateDoc(doc(db, "tenants", "UNIK", "vehicles", selectedVehicleId), { geofence: geoData })
+            db.collection("tenants").doc("UNIK").collection("vehicles").doc(selectedVehicleId).update({ geofence: geoData })
                 .then(() => {
                     showToast("Cerca Salva com Sucesso!");
                     cancelGeofenceEdit();
