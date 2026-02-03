@@ -911,7 +911,10 @@
                     .where("uid", "==", user.uid).get().then(snap => {
                         if (!snap.empty) {
                             const d = snap.docs[0].data();
-                            if (d.homeLat && d.homeLng) homePos = { lat: d.homeLat, lng: d.homeLng };
+                            if (d.homeLat && d.homeLng) {
+                                homePos = { lat: d.homeLat, lng: d.homeLng };
+                                renderHomeMarker(homePos);
+                            }
                         }
                     });
 
@@ -1162,6 +1165,15 @@
 
             activeGeofence = { lat: geoData.lat, lng: geoData.lng, radius: geoData.radius, layer: circle, marker: marker };
             updateGeofenceButtonUI(true);
+        }
+
+        function renderHomeMarker(pos) {
+            const homeIcon = L.divIcon({
+                className: 'custom-div-icon',
+                html: `<div style="background:var(--navy-dark); width:36px; height:36px; border-radius:50%; border:3px solid var(--gold); display:flex; align-items:center; justify-content:center; box-shadow:0 4px 10px rgba(0,0,0,0.3); color:var(--gold); font-size:20px;"><i class="ph-fill ph-house"></i></div>`,
+                iconSize: [36, 36], iconAnchor: [18, 18]
+            });
+            L.marker([pos.lat, pos.lng], { icon: homeIcon }).addTo(map).bindPopup("Minha Casa");
         }
 
         function updateGeofenceButtonUI(isActive) {
