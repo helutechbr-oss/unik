@@ -369,40 +369,44 @@
             box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
         }
 
-        /* GAVETA DE HISTÓRICO */
-        .drawer {
-            position: fixed;
-            top: 0;
+        /* PAINEL DE HISTÓRICO (BOTTOM SHEET) */
+        .history-panel {
+            position: absolute;
+            bottom: 0;
+            left: 0;
             right: 0;
-            width: 85%;
-            max-width: 320px;
-            height: 100%;
             background: white;
-            z-index: 3000;
-            transform: translateX(100%);
-            transition: transform 0.3s ease;
-            box-shadow: -5px 0 25px rgba(0, 0, 0, 0.2);
+            z-index: 2000;
+            border-radius: 24px 24px 0 0;
+            padding: 0;
+            box-shadow: 0 -5px 25px rgba(0, 0, 0, 0.2);
+            height: 60vh;
+            transform: translateY(100%);
+            transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1);
             display: flex;
             flex-direction: column;
         }
 
-        .drawer.active {
-            transform: translateX(0);
+        .history-panel.active {
+            transform: translateY(0);
         }
 
-        .drawer-header {
-            padding: 20px;
-            background: var(--navy-dark);
-            color: white;
+        .history-header {
+            padding: 16px 20px;
+            background: white;
+            /* Header branco limpo ou navy */
+            border-bottom: 1px solid #f1f5f9;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            border-radius: 24px 24px 0 0;
         }
 
-        .drawer-body {
+        .history-body {
             padding: 20px;
             flex: 1;
             overflow-y: auto;
+            background: #f8fafc;
         }
 
         .form-group {
@@ -733,66 +737,63 @@
         </div>
     </div>
 
-    <div id="historyDrawer" class="drawer">
-        <div class="drawer-header">
+    <div id="historyPanel" class="history-panel">
+        <div class="history-header">
             <span style="font-weight: 700; color: var(--navy-dark);"><i class="ph-bold ph-calendar"></i> Histórico de
                 Movimento</span>
-            <i class="ph-bold ph-x" onclick="toggleHistory()" style="cursor: pointer; font-size: 20px;"></i>
+            <i class="ph-bold ph-x" onclick="toggleHistory()"
+                style="cursor: pointer; font-size: 20px; color: var(--gray);"></i>
         </div>
-        <div class="drawer-body">
+        <div class="history-body">
             <div class="date-input-group"
                 style="background:#f8fafc; padding:15px; border-radius:12px; border:1px solid #e2e8f0; margin-bottom:12px;">
-                <div class="form-group" style="margin-bottom:10px;">
-                    <label
-                        style="font-size:11px; font-weight:700; color:var(--gray); display:block; margin-bottom:4px;">DATA/HORA
-                        INÍCIO</label>
-                    <input type="datetime-local" id="histStart"
-                        style="width:100%; padding:10px; border-radius:8px; border:1px solid #cbd5e1; font-family:'Inter';">
-                </div>
-                <div class="form-group">
-                    <label
-                        style="font-size:11px; font-weight:700; color:var(--gray); display:block; margin-bottom:4px;">DATA/HORA
-                        FINAL</label>
-                    <input type="datetime-local" id="histEnd"
-                        style="width:100%; padding:10px; border-radius:8px; border:1px solid #cbd5e1; font-family:'Inter';">
+                <div style="display:flex; gap:10px;">
+                    <div class="form-group" style="margin-bottom:0; flex:1;">
+                        <label
+                            style="font-size:10px; font-weight:700; color:var(--gray); display:block; margin-bottom:4px;">INÍCIO</label>
+                        <input type="datetime-local" id="histStart"
+                            style="width:100%; padding:8px; border-radius:8px; border:1px solid #cbd5e1; font-family:'Inter'; font-size:12px;">
+                    </div>
+                    <div class="form-group" style="margin-bottom:0; flex:1;">
+                        <label
+                            style="font-size:10px; font-weight:700; color:var(--gray); display:block; margin-bottom:4px;">FINAL</label>
+                        <input type="datetime-local" id="histEnd"
+                            style="width:100%; padding:8px; border-radius:8px; border:1px solid #cbd5e1; font-family:'Inter'; font-size:12px;">
+                    </div>
                 </div>
             </div>
 
             <div style="display:flex; gap:8px; margin-bottom:15px;">
                 <button class="btn-drawer btn-search" onclick="fetchHistory()"
                     style="flex:2; background:var(--navy-dark); color:var(--gold); border:none; padding:12px; border-radius:12px; font-weight:700; font-size:13px; display:flex; align-items:center; justify-content:center; gap:8px; cursor:pointer;">
-                    <i class="ph-bold ph-magnifying-glass"></i> REPRODUZIR ROTA
+                    <i class="ph-bold ph-magnifying-glass"></i> BUSCAR ROTA
                 </button>
                 <button onclick="clearHistory()"
                     style="flex:1; background:#f1f5f9; color:#64748b; border:none; border-radius:12px; font-weight:600; font-size:12px; cursor:pointer;">Limpar</button>
             </div>
 
-            <div id="historyLoading" style="display:none; text-align:center; padding:20px;">
-                <i class="ph ph-spinner ph-spin" style="font-size:24px; color:var(--navy-dark);"></i>
-                <p style="font-size:12px; color:var(--text-gray); margin-top:8px;">Buscando trajetos...</p>
+            <div id="historyLoading" style="display:none; text-align:center; padding:10px;">
+                <p style="font-size:12px; color:var(--text-gray);">Buscando trajetos...</p>
             </div>
 
             <div id="histStats"
                 style="display:none; background:white; border:1px solid #e2e8f0; border-radius:12px; padding:15px; margin-bottom:15px;">
-                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                <div style="display:grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap:5px;">
                     <div style="text-align:center;">
-                        <span style="font-size:10px; color:var(--gray); display:block;">KM TOTAL</span>
-                        <strong id="statKm" style="font-size:16px; color:var(--navy-dark);">0.0 km</strong>
+                        <span style="font-size:9px; color:var(--gray); display:block;">KM</span>
+                        <strong id="statKm" style="font-size:13px; color:var(--navy-dark);">0.0</strong>
                     </div>
                     <div style="text-align:center;">
-                        <span style="font-size:10px; color:var(--gray); display:block;">VEL. MÁX</span>
-                        <strong id="statMaxSpeed" style="font-size:16px; color:var(--navy-dark);">0 km/h</strong>
-                    </div>
-                </div>
-                <div
-                    style="border-top:1px solid #f1f5f9; margin-top:10px; padding-top:10px; display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
-                    <div style="text-align:center;">
-                        <span style="font-size:10px; color:var(--gray); display:block;">MOVIMENTO</span>
-                        <strong id="statMoving" style="font-size:13px; color:#166534;">0h 0m</strong>
+                        <span style="font-size:9px; color:var(--gray); display:block;">V.MÁX</span>
+                        <strong id="statMaxSpeed" style="font-size:13px; color:var(--navy-dark);">0</strong>
                     </div>
                     <div style="text-align:center;">
-                        <span style="font-size:10px; color:var(--gray); display:block;">PARADO</span>
-                        <strong id="statIdle" style="font-size:13px; color:#b91c1c;">0h 0m</strong>
+                        <span style="font-size:9px; color:var(--gray); display:block;">MOV</span>
+                        <strong id="statMoving" style="font-size:13px; color:#166534;">0h</strong>
+                    </div>
+                    <div style="text-align:center;">
+                        <span style="font-size:9px; color:var(--gray); display:block;">IDLE</span>
+                        <strong id="statIdle" style="font-size:13px; color:#b91c1c;">0h</strong>
                     </div>
                 </div>
             </div>
@@ -800,17 +801,17 @@
             <div id="reproControls"
                 style="display:none; background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:15px; margin-bottom:15px;">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-                    <span style="font-size:11px; font-weight:700; color:var(--navy-dark);">REPRODUÇÃO</span>
+                    <span style="font-size:11px; font-weight:700; color:var(--navy-dark);">PLAYER</span>
                     <span id="reproTime" style="font-size:11px; color:var(--gray);">--:--</span>
                 </div>
                 <div style="display:flex; gap:10px; align-items:center;">
                     <button id="btnPlay" onclick="startReproduction()"
-                        style="background:var(--navy-dark); border:none; color:white; width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center; cursor:pointer;">
-                        <i class="ph-fill ph-play" style="font-size:20px;"></i>
+                        style="background:var(--navy-dark); border:none; color:white; width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; cursor:pointer;">
+                        <i class="ph-fill ph-play" style="font-size:16px;"></i>
                     </button>
                     <button onclick="stopReproduction()"
-                        style="background:#e2e8f0; border:none; color:var(--navy-dark); width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center; cursor:pointer;">
-                        <i class="ph-fill ph-stop" style="font-size:20px;"></i>
+                        style="background:#e2e8f0; border:none; color:var(--navy-dark); width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; cursor:pointer;">
+                        <i class="ph-fill ph-stop" style="font-size:16px;"></i>
                     </button>
                     <input type="range" id="reproSlider" style="flex:1; accent-color:var(--navy-dark);" min="0"
                         max="100" value="0" oninput="seekReproduction(this.value)">
@@ -821,7 +822,7 @@
 
             <button class="btn-drawer btn-pdf" onclick="generatePDF()"
                 style="width:100%; background:white; color:var(--danger); border:1px solid #fee2e2; padding:12px; border-radius:12px; font-weight:600; font-size:13px; display:flex; align-items:center; justify-content:center; gap:8px; cursor:pointer; margin-top:20px;">
-                <i class="ph-bold ph-file-pdf"></i> GERAR RELATÓRIO PDF
+                <i class="ph-bold ph-file-pdf"></i> PDF
             </button>
         </div>
     </div>
@@ -1303,16 +1304,25 @@
         document.getElementById('histStart').value = toISO(startOfDay);
         document.getElementById('histEnd').value = toISO(endOfDay);
 
-        window.toggleHistory = () => {
-            document.getElementById('historyDrawer').classList.toggle('active');
-        };
-
         // Reproduction State
         let reproIndex = 0;
         let reproInterval = null;
         let reproMarker = null;
 
+        window.toggleHistory = () => {
+            const panel = document.getElementById('historyPanel');
+            const vehiclePanel = document.querySelector('.bottom-panel');
 
+            // Toggle active class
+            const isActive = panel.classList.toggle('active');
+
+            if (isActive) {
+                if (vehiclePanel) vehiclePanel.style.display = 'none';
+            } else {
+                if (vehiclePanel) vehiclePanel.style.display = 'flex';
+                clearHistory();
+            }
+        };
 
         window.clearHistory = () => {
             stopReproduction();
