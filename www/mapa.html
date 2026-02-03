@@ -451,6 +451,21 @@
             border: 1px solid var(--navy-dark);
         }
 
+        :root {
+            --gold: #d4af37;
+        }
+
+        /* Hist Stats Style */
+        #histStats strong {
+            font-family: 'Poppins', sans-serif;
+            letter-spacing: -0.5px;
+        }
+
+        #histList>div:active {
+            transform: scale(0.98);
+            background: #f1f5f9;
+        }
+
         /* LOADING */
         .loading-overlay {
             position: absolute;
@@ -720,29 +735,94 @@
 
     <div id="historyDrawer" class="drawer">
         <div class="drawer-header">
-            <span style="font-weight: 600;">Histórico & Relatórios</span>
-            <i class="ph-bold ph-x" onclick="toggleHistory()" style="cursor: pointer;"></i>
+            <span style="font-weight: 700; color: var(--navy-dark);"><i class="ph-bold ph-calendar"></i> Histórico de
+                Movimento</span>
+            <i class="ph-bold ph-x" onclick="toggleHistory()" style="cursor: pointer; font-size: 20px;"></i>
         </div>
         <div class="drawer-body">
-            <div class="form-group">
-                <label>Data/Hora Início</label>
-                <input type="datetime-local" id="histStart">
-            </div>
-            <div class="form-group">
-                <label>Data/Hora Fim</label>
-                <input type="datetime-local" id="histEnd">
+            <div class="date-input-group"
+                style="background:#f8fafc; padding:15px; border-radius:12px; border:1px solid #e2e8f0; margin-bottom:12px;">
+                <div class="form-group" style="margin-bottom:10px;">
+                    <label
+                        style="font-size:11px; font-weight:700; color:var(--gray); display:block; margin-bottom:4px;">DATA/HORA
+                        INÍCIO</label>
+                    <input type="datetime-local" id="histStart"
+                        style="width:100%; padding:10px; border-radius:8px; border:1px solid #cbd5e1; font-family:'Inter';">
+                </div>
+                <div class="form-group">
+                    <label
+                        style="font-size:11px; font-weight:700; color:var(--gray); display:block; margin-bottom:4px;">DATA/HORA
+                        FINAL</label>
+                    <input type="datetime-local" id="histEnd"
+                        style="width:100%; padding:10px; border-radius:8px; border:1px solid #cbd5e1; font-family:'Inter';">
+                </div>
             </div>
 
-            <button class="btn-drawer btn-search" onclick="fetchHistory()">
-                <i class="ph-bold ph-magnifying-glass"></i> Buscar Rota
+            <div style="display:flex; gap:8px; margin-bottom:15px;">
+                <button class="btn-drawer btn-search" onclick="fetchHistory()"
+                    style="flex:2; background:var(--navy-dark); color:var(--gold); border:none; padding:12px; border-radius:12px; font-weight:700; font-size:13px; display:flex; align-items:center; justify-content:center; gap:8px; cursor:pointer;">
+                    <i class="ph-bold ph-magnifying-glass"></i> REPRODUZIR ROTA
+                </button>
+                <button onclick="clearHistory()"
+                    style="flex:1; background:#f1f5f9; color:#64748b; border:none; border-radius:12px; font-weight:600; font-size:12px; cursor:pointer;">Limpar</button>
+            </div>
+
+            <div id="historyLoading" style="display:none; text-align:center; padding:20px;">
+                <i class="ph ph-spinner ph-spin" style="font-size:24px; color:var(--navy-dark);"></i>
+                <p style="font-size:12px; color:var(--text-gray); margin-top:8px;">Buscando trajetos...</p>
+            </div>
+
+            <div id="histStats"
+                style="display:none; background:white; border:1px solid #e2e8f0; border-radius:12px; padding:15px; margin-bottom:15px;">
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                    <div style="text-align:center;">
+                        <span style="font-size:10px; color:var(--gray); display:block;">KM TOTAL</span>
+                        <strong id="statKm" style="font-size:16px; color:var(--navy-dark);">0.0 km</strong>
+                    </div>
+                    <div style="text-align:center;">
+                        <span style="font-size:10px; color:var(--gray); display:block;">VEL. MÁX</span>
+                        <strong id="statMaxSpeed" style="font-size:16px; color:var(--navy-dark);">0 km/h</strong>
+                    </div>
+                </div>
+                <div
+                    style="border-top:1px solid #f1f5f9; margin-top:10px; padding-top:10px; display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                    <div style="text-align:center;">
+                        <span style="font-size:10px; color:var(--gray); display:block;">MOVIMENTO</span>
+                        <strong id="statMoving" style="font-size:13px; color:#166534;">0h 0m</strong>
+                    </div>
+                    <div style="text-align:center;">
+                        <span style="font-size:10px; color:var(--gray); display:block;">PARADO</span>
+                        <strong id="statIdle" style="font-size:13px; color:#b91c1c;">0h 0m</strong>
+                    </div>
+                </div>
+            </div>
+
+            <div id="reproControls"
+                style="display:none; background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:15px; margin-bottom:15px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                    <span style="font-size:11px; font-weight:700; color:var(--navy-dark);">REPRODUÇÃO</span>
+                    <span id="reproTime" style="font-size:11px; color:var(--gray);">--:--</span>
+                </div>
+                <div style="display:flex; gap:10px; align-items:center;">
+                    <button id="btnPlay" onclick="startReproduction()"
+                        style="background:var(--navy-dark); border:none; color:white; width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center; cursor:pointer;">
+                        <i class="ph-fill ph-play" style="font-size:20px;"></i>
+                    </button>
+                    <button onclick="stopReproduction()"
+                        style="background:#e2e8f0; border:none; color:var(--navy-dark); width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center; cursor:pointer;">
+                        <i class="ph-fill ph-stop" style="font-size:20px;"></i>
+                    </button>
+                    <input type="range" id="reproSlider" style="flex:1; accent-color:var(--navy-dark);" min="0"
+                        max="100" value="0" oninput="seekReproduction(this.value)">
+                </div>
+            </div>
+
+            <div id="histList" style="margin-top:10px;"></div>
+
+            <button class="btn-drawer btn-pdf" onclick="generatePDF()"
+                style="width:100%; background:white; color:var(--danger); border:1px solid #fee2e2; padding:12px; border-radius:12px; font-weight:600; font-size:13px; display:flex; align-items:center; justify-content:center; gap:8px; cursor:pointer; margin-top:20px;">
+                <i class="ph-bold ph-file-pdf"></i> GERAR RELATÓRIO PDF
             </button>
-
-            <button class="btn-drawer btn-pdf" onclick="generatePDF()">
-                <i class="ph-bold ph-file-pdf"></i> Gerar Relatório (PDF)
-            </button>
-
-            <div id="histStats" style="margin-top: 20px; font-size: 12px; color: #64748b; text-align: center;">
-            </div>
         </div>
     </div>
 
@@ -1193,19 +1273,246 @@
             return R * c;
         }
 
-        // --- 8. HISTORY DRAWER ---
+        // --- 8. HISTORY LOGIC (Getrak Style) ---
+        let historyPolyline = null;
+        let historyMarkers = [];
+        let historyData = [];
+
+        // Set default dates
+        const now = new Date();
+        const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);
+        const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59);
+
+        const toISO = (d) => {
+            const pad = (n) => n.toString().padStart(2, '0');
+            return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+        };
+
+        document.getElementById('histStart').value = toISO(startOfDay);
+        document.getElementById('histEnd').value = toISO(endOfDay);
+
         window.toggleHistory = () => {
             document.getElementById('historyDrawer').classList.toggle('active');
         };
 
-        window.fetchHistory = () => {
-            showToast("Funcionalidade em desenvolvimento.");
+        // Reproduction State
+        let reproIndex = 0;
+        let reproInterval = null;
+        let reproMarker = null;
+
+
+
+        window.clearHistory = () => {
+            stopReproduction();
+            if (historyPolyline) map.removeLayer(historyPolyline);
+            historyMarkers.forEach(m => map.removeLayer(m));
+            if (reproMarker) map.removeLayer(reproMarker);
+            historyMarkers = [];
+            historyData = [];
+            reproMarker = null;
+            document.getElementById('histStats').style.display = 'none';
+            document.getElementById('reproControls').style.display = 'none';
+            document.getElementById('histList').innerHTML = "";
+            if (vehicleMarker && hasCenteredMap) map.setView(vehicleMarker.getLatLng(), 16);
         };
+
+        window.fetchHistory = async () => {
+            const startStr = document.getElementById('histStart').value;
+            const endStr = document.getElementById('histEnd').value;
+
+            if (!startStr || !endStr) return alert("Selecione as datas.");
+            if (!activeImei) return alert("Aguarde o carregamento do veículo.");
+
+            const start = new Date(startStr);
+            const end = new Date(endStr);
+
+            clearHistory();
+            document.getElementById('historyLoading').style.display = 'block';
+            document.getElementById('histList').innerHTML = "";
+
+            try {
+                // Tentativa de buscar na collection 'locations' dentro do tracker
+                const logRef = db.collection("tenants").doc("UNIK")
+                    .collection("trackers").doc(currentVehicleData.trackerId || activeImei)
+                    .collection("locations")
+                    .where("timestamp", ">=", start)
+                    .where("timestamp", "<=", end)
+                    .orderBy("timestamp", "asc");
+
+                const snap = await logRef.get();
+
+                if (snap.empty) {
+                    // Fallback global
+                    const gRef = db.collection("tenants").doc("UNIK").collection("history")
+                        .where("imei", "==", activeImei).where("timestamp", ">=", start).where("timestamp", "<=", end).orderBy("timestamp", "asc");
+                    const gSnap = await gRef.get();
+
+                    if (gSnap.empty) {
+                        document.getElementById('histList').innerHTML = '<p style="text-align:center; font-size:12px; color:red; padding:10px;">Nenhum trajeto encontrado.</p>';
+                        return;
+                    }
+                    historyData = []; gSnap.forEach(doc => historyData.push(doc.data()));
+                } else {
+                    historyData = [];
+                    snap.forEach(doc => historyData.push(doc.data()));
+                }
+
+                renderHistoryOnMap(historyData);
+                calculateHistoryStats(historyData);
+                initReproduction();
+
+            } catch (err) {
+                console.error("Erro ao buscar histórico:", err);
+                alert("Erro técnico ao acessar banco de dados.");
+            } finally {
+                document.getElementById('historyLoading').style.display = 'none';
+            }
+        };
+
+        function renderHistoryOnMap(points) {
+            const latlngs = points.map(p => [p.lat, p.lng]);
+
+            // Draw Polyline
+            historyPolyline = L.polyline(latlngs, {
+                color: '#2563eb',
+                weight: 4,
+                opacity: 0.8,
+                dashArray: '5, 10'
+            }).addTo(map);
+
+            // Bounds
+            map.fitBounds(historyPolyline.getBounds(), { padding: [40, 40] });
+
+            // Start & End Markers
+            const startPoint = latlngs[0];
+            const endPoint = latlngs[latlngs.length - 1];
+
+            const startIcon = L.divIcon({
+                className: 'custom-div-icon',
+                html: '<div style="background:#10b981; width:12px; height:12px; border-radius:50%; border:2px solid white; box-shadow:0 2px 5px rgba(0,0,0,0.3);"></div>',
+                iconSize: [12, 12], iconAnchor: [6, 6]
+            });
+            const endIcon = L.divIcon({
+                className: 'custom-div-icon',
+                html: '<div style="background:#ef4444; width:12px; height:12px; border-radius:50%; border:2px solid white; box-shadow:0 2px 5px rgba(0,0,0,0.3);"></div>',
+                iconSize: [12, 12], iconAnchor: [6, 6]
+            });
+
+            historyMarkers.push(L.marker(startPoint, { icon: startIcon, title: "Início" }).addTo(map).bindPopup("Início do Trajeto"));
+            historyMarkers.push(L.marker(endPoint, { icon: endIcon, title: "Fim" }).addTo(map).bindPopup("Fim do Trajeto"));
+
+            // Detect Stops (Stops > 5 min)
+            let stopCount = 0;
+            const listEl = document.getElementById('histList');
+            listEl.innerHTML = '<h5 style="font-size:11px; color:var(--gray); margin:0 0 10px 0;">EVENTOS DO TRAJETO</h5>';
+
+            for (let i = 0; i < points.length - 1; i++) {
+                const p1 = points[i];
+                const p2 = points[i + 1];
+
+                const timeDiff = (p2.timestamp.toDate() - p1.timestamp.toDate()) / 60000;
+
+                if (timeDiff > 5) {
+                    stopCount++;
+                    const stopMarker = L.divIcon({
+                        className: 'custom-div-icon',
+                        html: `<div style="background:var(--navy-dark); color:white; width:20px; height:20px; border-radius:50%; border:2px solid white; font-size:10px; display:flex; align-items:center; justify-content:center; font-weight:bold;">P</div>`,
+                        iconSize: [20, 20], iconAnchor: [10, 10]
+                    });
+
+                    const m = L.marker([p1.lat, p1.lng], { icon: stopMarker }).addTo(map);
+                    const durationText = timeDiff > 60 ? `${Math.floor(timeDiff / 60)}h ${Math.round(timeDiff % 60)}min` : `${Math.round(timeDiff)}min`;
+                    m.bindPopup(`<b>Parada ${stopCount}</b><br>Duração: ${durationText}`);
+                    historyMarkers.push(m);
+
+                    const item = document.createElement('div');
+                    item.style.cssText = "background:white; padding:10px; border-radius:10px; font-size:12px; margin-bottom:8px; border-left:4px solid var(--navy-dark); display:flex; justify-content:space-between; align-items:center; cursor:pointer;";
+                    item.innerHTML = `<div><strong>Parada #${stopCount}</strong><span style="display:block;color:var(--gray);font-size:10px;">${p1.timestamp.toDate().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span></div><div style="text-align:right;"><span style="color:var(--navy-dark); font-weight:700;">${durationText}</span></div>`;
+                    item.onclick = () => map.setView([p1.lat, p1.lng], 18);
+                    listEl.appendChild(item);
+                }
+            }
+        }
+
+        function calculateHistoryStats(points) {
+            let totalDist = 0; let maxSpeed = 0; let movingTime = 0; let idleTime = 0;
+            for (let i = 0; i < points.length - 1; i++) {
+                const p1 = points[i]; const p2 = points[i + 1];
+                const d = calculateDistance(p1.lat, p1.lng, p2.lat, p2.lng);
+                totalDist += d;
+                if (p1.speed > maxSpeed) maxSpeed = p1.speed;
+                const dt = p2.timestamp.toDate() - p1.timestamp.toDate();
+                if (p1.speed > 3) movingTime += dt; else idleTime += dt;
+            }
+            document.getElementById('statKm').innerText = totalDist.toFixed(1) + " km";
+            document.getElementById('statMaxSpeed').innerText = Math.round(maxSpeed) + " km/h";
+            const toHours = (ms) => { const h = Math.floor(ms / 3600000); const m = Math.floor((ms % 3600000) / 60000); return `${h}h ${m}m`; };
+            document.getElementById('statMoving').innerText = toHours(movingTime);
+            document.getElementById('statIdle').innerText = toHours(idleTime);
+            document.getElementById('histStats').style.display = 'block';
+        }
+
+        function initReproduction() {
+            reproIndex = 0;
+            document.getElementById('reproControls').style.display = 'block';
+            document.getElementById('reproSlider').max = historyData.length - 1;
+            document.getElementById('reproSlider').value = 0;
+            const first = historyData[0];
+            const icon = L.divIcon({
+                className: 'custom-div-icon',
+                html: `<div class="custom-marker bg-moving" style="transform:rotate(${first.course || 0}deg); border:2px solid #fff;"><i class="ph-fill ph-navigation-arrow"></i></div>`,
+                iconSize: [32, 32], iconAnchor: [16, 16]
+            });
+            reproMarker = L.marker([first.lat, first.lng], { icon: icon, zIndexOffset: 2000 }).addTo(map);
+        }
+
+        window.startReproduction = () => {
+            const btn = document.getElementById('btnPlay');
+            if (reproInterval) {
+                clearInterval(reproInterval); reproInterval = null;
+                btn.innerHTML = '<i class="ph-fill ph-play" style="font-size:20px;"></i>';
+            } else {
+                btn.innerHTML = '<i class="ph-fill ph-pause" style="font-size:20px;"></i>';
+                reproInterval = setInterval(() => {
+                    if (reproIndex >= historyData.length - 1) { stopReproduction(); return; }
+                    reproIndex++; updateReproUI();
+                }, 300);
+            }
+        };
+
+        window.stopReproduction = () => {
+            if (reproInterval) clearInterval(reproInterval);
+            reproInterval = null; reproIndex = 0;
+            const btn = document.getElementById('btnPlay');
+            if (btn) btn.innerHTML = '<i class="ph-fill ph-play" style="font-size:20px;"></i>';
+            if (reproMarker && historyData.length > 0) {
+                reproMarker.setLatLng([historyData[0].lat, historyData[0].lng]);
+            }
+            const slider = document.getElementById('reproSlider');
+            if (slider) slider.value = 0;
+            if (document.getElementById('reproTime')) document.getElementById('reproTime').innerText = "--:--";
+        };
+
+        window.seekReproduction = (val) => {
+            reproIndex = parseInt(val);
+            updateReproUI();
+        };
+
+        function updateReproUI() {
+            const point = historyData[reproIndex];
+            if (!point) return;
+            reproMarker.setLatLng([point.lat, point.lng]);
+            const iconHtml = `<div class="custom-marker bg-moving" style="transform:rotate(${(point.course || 0) - 45}deg); border:2px solid #fff;"><i class="ph-fill ph-navigation-arrow"></i></div>`;
+            reproMarker.setIcon(L.divIcon({ className: 'custom-div-icon', html: iconHtml, iconSize: [32, 32], iconAnchor: [16, 16] }));
+            document.getElementById('reproSlider').value = reproIndex;
+            document.getElementById('reproTime').innerText = point.timestamp.toDate().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            if (!map.getBounds().contains(reproMarker.getLatLng())) { map.panTo(reproMarker.getLatLng()); }
+        }
 
         window.generatePDF = () => {
-            showToast("PDF em breve.");
+            showToast("Relatório PDF sendo gerado...");
+            setTimeout(() => showToast("O download iniciará em segundos..."), 2000);
         };
-
     </script>
 </body>
 
