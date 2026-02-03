@@ -1591,13 +1591,23 @@
                     const item = document.createElement('div');
                     item.className = 'timeline-item';
                     item.onclick = () => {
-                        map.setView([p1.lat, p1.lng], 17);
+                        // Offset para centralizar no topo (já que o painel cobre 60% em baixo)
+                        const mapH = map.getSize().y;
+                        const targetPoint = map.project([p1.lat, p1.lng], 17).add([0, mapH * 0.25]);
+                        const targetLatLng = map.unproject(targetPoint, 17);
+                        map.setView(targetLatLng, 17);
+
                         m.openPopup();
+
+                        // Highlight Visual
+                        document.querySelectorAll('.timeline-item').forEach(i => i.style.background = 'transparent');
+                        item.querySelector('div:nth-child(2)').style.background = '#e0f2fe';
+                        setTimeout(() => item.querySelector('div:nth-child(2)').style.background = 'white', 2000);
                     };
 
                     item.innerHTML = `
                         <div class="timeline-dot stop"></div>
-                        <div style="background:white; padding:12px; border-radius:12px; border:1px solid #e2e8f0; display:flex; justify-content:space-between; align-items:center; box-shadow:0 1px 3px rgba(0,0,0,0.05);">
+                        <div style="background:white; padding:12px; border-radius:12px; border:1px solid #e2e8f0; display:flex; justify-content:space-between; align-items:center; box-shadow:0 1px 3px rgba(0,0,0,0.05); transition: background 0.3s;">
                             <div>
                                 <span style="font-size:10px; font-weight:700; color:var(--danger); text-transform:uppercase; letter-spacing:0.5px;">PARADA #${stopCount}</span>
                                 <div style="font-size:13px; font-weight:600; color:var(--navy-dark); margin-top:2px;">${startTime}</div>
