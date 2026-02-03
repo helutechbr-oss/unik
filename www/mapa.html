@@ -470,6 +470,77 @@
             background: #f1f5f9;
         }
 
+        /* Quick Date Chips */
+        .chip-group {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 12px;
+            overflow-x: auto;
+            padding-bottom: 4px;
+            margin-top: 10px;
+        }
+
+        .chip-date {
+            background: white;
+            border: 1px solid #e2e8f0;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--gray);
+            white-space: nowrap;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+        }
+
+        .chip-date.active {
+            background: var(--navy-dark);
+            color: var(--gold);
+            border-color: var(--navy-dark);
+            box-shadow: 0 4px 6px rgba(15, 23, 42, 0.2);
+        }
+
+        /* Timeline Style */
+        .timeline-item {
+            position: relative;
+            padding-left: 24px;
+            margin-bottom: 0;
+            cursor: pointer;
+            padding-bottom: 16px;
+        }
+
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: 6px;
+            top: 6px;
+            bottom: -6px;
+            width: 2px;
+            background: #e2e8f0;
+        }
+
+        .timeline-item:last-child::before {
+            display: none;
+        }
+
+        .timeline-dot {
+            position: absolute;
+            left: 0;
+            top: 4px;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: white;
+            border: 2px solid var(--navy-dark);
+            z-index: 1;
+        }
+
+        .timeline-dot.stop {
+            border-color: var(--danger);
+            background: var(--danger);
+        }
+
         /* LOADING */
         .loading-overlay {
             position: absolute;
@@ -745,8 +816,16 @@
                 style="cursor: pointer; font-size: 20px; color: var(--gray);"></i>
         </div>
         <div class="history-body">
-            <div class="date-input-group"
-                style="background:#f8fafc; padding:15px; border-radius:12px; border:1px solid #e2e8f0; margin-bottom:12px;">
+            <!-- Quick Chips -->
+            <div class="chip-group">
+                <button class="chip-date active" onclick="setHistoryDate('today', this)">Hoje</button>
+                <button class="chip-date" onclick="setHistoryDate('yesterday', this)">Ontem</button>
+                <button class="chip-date" onclick="setHistoryDate('last6h', this)">Últimas 6h</button>
+                <button class="chip-date" onclick="toggleCustomDate(this)">Personalizado</button>
+            </div>
+
+            <div id="customDateGroup" class="date-input-group"
+                style="display:none; background:#f8fafc; padding:15px; border-radius:12px; border:1px solid #e2e8f0; margin-bottom:12px;">
                 <div style="display:flex; gap:10px;">
                     <div class="form-group" style="margin-bottom:0; flex:1;">
                         <label
@@ -1304,6 +1383,42 @@
         document.getElementById('histStart').value = toISO(startOfDay);
         document.getElementById('histEnd').value = toISO(endOfDay);
 
+        // --- QUICK DATES LOGIC ---
+        window.setHistoryDate = (type, btn) => {
+            // UI Toggle
+            document.querySelectorAll('.chip-date').forEach(c => c.classList.remove('active'));
+            if (btn) btn.classList.add('active');
+            document.getElementById('customDateGroup').style.display = 'none';
+
+            const n = new Date();
+            let s, e;
+
+            if (type === 'today') {
+                s = new Date(n.getFullYear(), n.getMonth(), n.getDate(), 0, 0, 0);
+                e = new Date(n.getFullYear(), n.getMonth(), n.getDate(), 23, 59, 59);
+            } else if (type === 'yesterday') {
+                const y = new Date(n); y.setDate(n.getDate() - 1);
+                s = new Date(y.getFullYear(), y.getMonth(), y.getDate(), 0, 0, 0);
+                e = new Date(y.getFullYear(), y.getMonth(), y.getDate(), 23, 59, 59);
+            } else if (type === 'last6h') {
+                e = new Date();
+                s = new Date(e.getTime() - (6 * 60 * 60 * 1000));
+            }
+
+            document.getElementById('histStart').value = toISO(s);
+            document.getElementById('histEnd').value = toISO(e);
+
+            // Auto fetch? Optional. Let's make user click search.
+            // fetchHistory(); 
+        };
+
+        window.toggleCustomDate = (btn) => {
+            document.querySelectorAll('.chip-date').forEach(c => c.classList.remove('active'));
+            if (btn) btn.classList.add('active');
+            const grp = document.getElementById('customDateGroup');
+            grp.style.display = 'block';
+        };
+
         // Reproduction State
         let reproIndex = 0;
         let reproInterval = null;
@@ -1462,19 +1577,36 @@
                     stopCount++;
                     const stopMarker = L.divIcon({
                         className: 'custom-div-icon',
-                        html: `<div style="background:var(--navy-dark); color:white; width:20px; height:20px; border-radius:50%; border:2px solid white; font-size:10px; display:flex; align-items:center; justify-content:center; font-weight:bold;">P</div>`,
-                        iconSize: [20, 20], iconAnchor: [10, 10]
+                        html: `<div style="background:var(--danger); color:white; width:22px; height:22px; border-radius:50%; border:2px solid white; font-size:10px; display:flex; align-items:center; justify-content:center; font-weight:bold; box-shadow:0 2px 4px rgba(0,0,0,0.3);">P${stopCount}</div>`,
+                        iconSize: [22, 22], iconAnchor: [11, 11]
                     });
 
                     const m = L.marker([p1.lat, p1.lng], { icon: stopMarker }).addTo(map);
-                    const durationText = timeDiff > 60 ? `${Math.floor(timeDiff / 60)}h ${Math.round(timeDiff % 60)}min` : `${Math.round(timeDiff)}min`;
-                    m.bindPopup(`<b>Parada ${stopCount}</b><br>Duração: ${durationText}`);
+                    const durationText = timeDiff > 60 ? `${Math.floor(timeDiff / 60)}h ${Math.round(timeDiff % 60)}m` : `${Math.round(timeDiff)}m`;
+                    const startTime = p1.timestamp.toDate().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+                    m.bindPopup(`<b>Parada ${stopCount}</b><br>Duração: ${durationText}<br>Início: ${startTime}`);
                     historyMarkers.push(m);
 
                     const item = document.createElement('div');
-                    item.style.cssText = "background:white; padding:10px; border-radius:10px; font-size:12px; margin-bottom:8px; border-left:4px solid var(--navy-dark); display:flex; justify-content:space-between; align-items:center; cursor:pointer;";
-                    item.innerHTML = `<div><strong>Parada #${stopCount}</strong><span style="display:block;color:var(--gray);font-size:10px;">${p1.timestamp.toDate().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span></div><div style="text-align:right;"><span style="color:var(--navy-dark); font-weight:700;">${durationText}</span></div>`;
-                    item.onclick = () => map.setView([p1.lat, p1.lng], 18);
+                    item.className = 'timeline-item';
+                    item.onclick = () => {
+                        map.setView([p1.lat, p1.lng], 17);
+                        m.openPopup();
+                    };
+
+                    item.innerHTML = `
+                        <div class="timeline-dot stop"></div>
+                        <div style="background:white; padding:12px; border-radius:12px; border:1px solid #e2e8f0; display:flex; justify-content:space-between; align-items:center; box-shadow:0 1px 3px rgba(0,0,0,0.05);">
+                            <div>
+                                <span style="font-size:10px; font-weight:700; color:var(--danger); text-transform:uppercase; letter-spacing:0.5px;">PARADA #${stopCount}</span>
+                                <div style="font-size:13px; font-weight:600; color:var(--navy-dark); margin-top:2px;">${startTime}</div>
+                            </div>
+                            <div style="text-align:right;">
+                                <div style="font-size:12px; font-weight:600; color:var(--gray);"><i class="ph-bold ph-hourglass"></i> ${durationText}</div>
+                            </div>
+                        </div>
+                    `;
                     listEl.appendChild(item);
                 }
             }
