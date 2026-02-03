@@ -618,11 +618,16 @@
             if (!file) return;
 
             const user = auth.currentUser;
-            if (!user) return;
+            if (!user) {
+                alert("Usuário não autenticado. Faça login novamente.");
+                return;
+            }
 
             const imgEl = document.getElementById('profileImg');
             // Optimistic update (show loading or blur)
+            const originalSrc = imgEl.src;
             imgEl.style.opacity = '0.5';
+            showToast("Enviando foto...");
 
             try {
                 // 1. Upload to Storage: users/{uid}/profile.jpg
@@ -655,13 +660,31 @@
                 // 3. Update UI
                 imgEl.src = downloadURL;
                 imgEl.style.opacity = '1';
-                alert("Foto de perfil atualizada!");
+                showToast("Foto de perfil atualizada!");
 
             } catch (error) {
                 console.error("Erro no upload:", error);
-                alert("Erro ao enviar foto. Tente novamente.");
+                alert("Erro ao enviar foto: " + error.message);
+                imgEl.src = originalSrc; // Revert
                 imgEl.style.opacity = '1';
+            } finally {
+                input.value = ''; // Reset input to allow re-upload of same file if needed
             }
+        }
+
+        // Helper Toast (Copied from map logic for consistency if needed, or simple alert fallback)
+        function showToast(msg) {
+            // Check if toast element exists, if not create
+            let t = document.getElementById('toast-notification');
+            if (!t) {
+                t = document.createElement('div');
+                t.id = 'toast-notification';
+                t.style.cssText = "position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: #333; color: white; padding: 10px 20px; border-radius: 30px; font-size: 12px; z-index: 5000; display: none; white-space: nowrap; max-width: 90%;";
+                document.body.appendChild(t);
+            }
+            t.innerText = msg;
+            t.style.display = 'block';
+            setTimeout(() => t.style.display = 'none', 3000);
         }
 
         // 3. Carregar Frota (Compat)

@@ -899,7 +899,15 @@
             document.getElementById('uiPlate').innerText = vData.plate || "---";
 
             // Check Blocker UI availability (assuming available if fetched)
-            document.getElementById('commandSection').style.display = 'flex';
+            // Check Blocker UI availability - Only show if has blocker
+            // Verifica bloqueador nas propriedades do veículo
+            const hasBlocker = vData.blockerInstalled === true || vData.hasBlocker === true || vData.bloqueador === true || vData.possuiBloqueador === true;
+
+            if (hasBlocker) {
+                document.getElementById('commandSection').style.display = 'flex';
+            } else {
+                document.getElementById('commandSection').style.display = 'none';
+            }
         }
 
         function updateVehicleStatusUI(tData) {
