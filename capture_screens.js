@@ -2,108 +2,136 @@ const puppeteer = require('puppeteer');
 const path = require('path');
 const fs = require('fs');
 
+// Configuration
+const OUTPUT_DIR = 'screenshots_v2';
+// URL REAL DO APP (Baseado no seu projeto Firebase)
+// Se não for essa URL, o script falhará, mas é a tentativa mais robusta para pegar dados reais.
+const APP_URL = 'https://rastreiamais-81087.web.app';
+
+const USER_EMAIL = 'elvis@rastreiamaisrb.com.br';
+const USER_PASS = 'Unik@2026';
+
+const DEVICES = [
+    {
+        name: 'iphone',
+        // iPhone 6.5"
+        viewport: { width: 414, height: 896, deviceScaleFactor: 3, isMobile: true, hasTouch: true },
+        prefix: 'iphone_65_'
+    },
+    {
+        name: 'ipad',
+        // iPad Pro 12.9"
+        viewport: { width: 1024, height: 1366, deviceScaleFactor: 2, isMobile: true, hasTouch: true },
+        prefix: 'ipad_129_'
+    }
+];
+
+const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
 (async () => {
+    if (!fs.existsSync(OUTPUT_DIR)) {
+        fs.mkdirSync(OUTPUT_DIR);
+    }
+
+    console.log(`Conectando ao Chrome e acessando: ${APP_URL}`);
+
     const browser = await puppeteer.launch({
-        headless: "new",
+        headless: "new", // Mude para false se quiser ver acontecendo
         executablePath: "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
-        args: ['--no-sandbox', '--disable-setuid-sandbox', '--allow-file-access-from-files']
+        defaultViewport: null,
+        args: [
+            '--no-sandbox',
+            '--disable-setuid-sandbox',
+            '--disable-web-security',
+            '--start-maximized'
+        ]
     });
-
-    const page = await browser.newPage();
-
-    // iPad Pro 12.9" (3rd, 4th, 5th, 6th gen) Display configuration
-    // Resolution: 2048 x 2732 px (Portrait)
-    // Point size: 1024 x 1366 points
-    // Scale factor: 2
-    await page.setViewport({
-        width: 1024,
-        height: 1366,
-        deviceScaleFactor: 2,
-        isMobile: true,
-        hasTouch: true
-    });
-
-    // Helper to wait
-    const delay = ms => new Promise(res => setTimeout(res, ms));
 
     try {
-        // 1. Login Screen
-        // We open the index.html directly. CORS might be an issue for Firebase, 
-        // but the UI should render even if network fails initially.
-        // However, to log in, we need network.
-        // Let's assume we can capture the Login UI as is.
-        const indexPath = 'file://' + path.resolve(__dirname, 'www/index.html');
-        console.log(`Navigating to ${indexPath}`);
-        await page.goto(indexPath, { waitUntil: 'networkidle0' });
+        for (const device of DEVICES) {
+            console.log(`\n--- Iniciando captura: ${device.name} ---`);
+            const page = await browser.newPage();
+            await page.setViewport(device.viewport);
 
-        // Inject some CSS to ensure it looks perfect (hide scrollbars etc if any)
-        await page.addStyleTag({ content: 'body { overflow: hidden !important; }' });
+            // 1. Acessar a página de Login (ONLINE)
+            console.log(`  Navegando para ${APP_URL}...`);
+            await page.goto(APP_URL, { waitUntil: 'networkidle0', timeout: 60000 });
 
-        // Screenshot Login
-        await page.screenshot({ path: 'screenshot_ipad_1_login.png' });
-        console.log('Captured Login (iPad)');
+            // Verificar se já estamos logados ou se precisamos logar
+            const isLoginPage = await page.$('#email') !== null;
 
-        // 2. Home Screen (Dashboard)
-        // ... (existing logic) ...
-        const homePath = 'file://' + path.resolve(__dirname, 'www/home.html');
-        // ... (existing logic) ...
+            if (isLoginPage) {
+                console.log('  Fazendo Login Real...');
+                await page.type('#email', USER_EMAIL);
+                await page.type('#password', USER_PASS);
+                await delay(1000);
 
-        await page.goto(homePath, { waitUntil: 'domcontentloaded' });
+                // Clicar no botão de login (procurando pelo texto ou classe)
+                // O botão é submit dentro do form #loginForm
+                await page.evaluate(() => {
+                    const btn = document.querySelector('button.btn-primary');
+                    if (btn) btn.click();
+                });
 
-        if (page.url().includes('index.html')) {
-            // ... (auth bypass logic) ...
-            await page.evaluateOnNewDocument(() => {
-                // ... (mock logic) ...
-                window.firebase = {
-                    // ... (mock implementation) ...
-                    auth: () => ({
-                        onAuthStateChanged: (cb) => {
-                            cb({ uid: 'test-ipad', email: 'associado@unik.com', displayName: 'Associado UNIK' });
-                        },
-                        currentUser: { uid: 'test-ipad', email: 'associado@unik.com' }
-                    }),
-                    // ...
-                    firestore: () => ({
-                        // ... (mock firestore) ...
-                        collection: () => ({
-                            doc: () => ({
-                                collection: () => ({
-                                    where: () => ({
-                                        onSnapshot: (cb) => {
-                                            cb({
-                                                empty: false,
-                                                forEach: (fn) => {
-                                                    // Duplicate cars to fill iPad screen
-                                                    fn({ data: () => ({ model: 'VW GOL 1.6', plate: 'ABC-1234', status: 'active', speed: 0, ignition: 'off', gpsSignal: 100, bat_level: 90 }) });
-                                                    fn({ data: () => ({ model: 'FIAT TORO', plate: 'XYZ-9876', status: 'blocked', speed: 0, ignition: 'off', gpsSignal: 80, bat_level: 50 }) });
-                                                    fn({ data: () => ({ model: 'HONDA CIVIC', plate: 'OPO-5544', status: 'active', speed: 80, ignition: 'on', gpsSignal: 100, bat_level: 95 }) });
-                                                    fn({ data: () => ({ model: 'C. TRUCK', plate: 'TRK-9000', status: 'active', speed: 45, ignition: 'on', gpsSignal: 85, bat_level: 70 }) });
-                                                }
-                                            })
-                                        }
-                                    })
-                                })
-                            })
-                        })
-                    })
-                };
+                console.log('  Aguardando autenticação...');
+
+                // Esperar sair da tela de login (esperar o form sumir ou aparecer header da home)
+                try {
+                    await page.waitForSelector('.header-top', { timeout: 15000 });
+                } catch (e) {
+                    console.log('  (Aviso: Demora no login ou erro, tentando printar mesmo assim)');
+                }
+            } else {
+                console.log('  Já parece estar logado ou em outra tela.');
+            }
+
+            await delay(3000); // Esperar animações e dados carregarem
+
+            // Estamos na HOME agora
+            console.log(`  Capturando Home...`);
+            // Injetar CSS para esconder loading se tiver travado
+            await page.addStyleTag({ content: '#loading { display: none !important; } .loading-overlay { display: none !important; }' });
+            await page.screenshot({ path: path.join(OUTPUT_DIR, `${device.prefix}2_home.png`) });
+
+            // Agora vamos para o Login (sim, tirar print do login depois de sair ou antes... 
+            // Como já logamos, para tirar print do login limpo, teríamos que deslogar.
+            // Mas a ordem do user foi: Login > Home > Map.
+            // Como já passei do login, vou deixar o print do login para uma nova aba anônima ou ignorar se já tivermos.
+            // Vou focar em HOME e MAPA que são os problemas.
+            // O print de Login eu posso fazer abrindo uma aba Incognito separada DEPOIS.
+
+            // Navegar para MAPA
+            console.log(`  Navegando para Mapa...`);
+            // Clicar no botão que vai pro mapa ou navegar via URL se for SPA
+            // O app usa window.location.href = 'mapa.html' geralmente.
+            // Na web, seria URL/mapa.html
+            const mapUrl = `${APP_URL}/mapa.html`;
+            await page.goto(mapUrl, { waitUntil: 'networkidle0' });
+
+            console.log(`  Aguardando Mapa carregar...`);
+            await delay(5000); // Mapa demora
+
+            await page.screenshot({ path: path.join(OUTPUT_DIR, `${device.prefix}3_map.png`) });
+
+
+            // Voltar para tirar o print do Login Limpo (Logout)
+            console.log(`  Capturando Login Limpo...`);
+            await page.goto(APP_URL, { waitUntil: 'networkidle0' });
+            // Forçar logout se estiver logado
+            await page.evaluate(() => {
+                if (window.firebase && window.firebase.auth) window.firebase.auth().signOut();
+                // Ou limpar localStorage
+                localStorage.clear();
             });
-            await page.goto(homePath, { waitUntil: 'networkidle0' });
+            await page.reload({ waitUntil: 'networkidle0' });
+            await delay(2000);
+            await page.screenshot({ path: path.join(OUTPUT_DIR, `${device.prefix}1_login.png`) });
+
+            await page.close();
         }
 
-        await delay(2000);
-        await page.screenshot({ path: 'screenshot_ipad_2_home.png' });
-        console.log('Captured Home (iPad)');
-
-        // 3. Map Screen
-        const mapPath = 'file://' + path.resolve(__dirname, 'www/mapa.html');
-        await page.goto(mapPath, { waitUntil: 'networkidle0' });
-        await delay(3000);
-        await page.screenshot({ path: 'screenshot_ipad_3_map.png' });
-        console.log('Captured Map (iPad)');
-
     } catch (error) {
-        console.error('Error capturing screenshots:', error);
+        console.error('ERRO FATAL:', error);
     } finally {
         await browser.close();
     }

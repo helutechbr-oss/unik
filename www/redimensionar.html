@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Apple Resizer</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            padding: 20px;
+            background: #f0f2f5;
+            text-align: center;
+        }
+
+        .drop-zone {
+            border: 2px dashed #ccc;
+            padding: 40px;
+            background: white;
+            margin: 20px auto;
+            max-width: 600px;
+            cursor: pointer;
+        }
+
+        .drop-zone:hover {
+            background: #eef;
+            border-color: #007bff;
+        }
+
+        canvas {
+            display: none;
+        }
+
+        .output {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .output img {
+            max-width: 150px;
+            border: 1px solid #ccc;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 10px 20px;
+            background: #007bff;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Redimensionador Apple (2048 x 2732) - iPad</h1>
+    <p>Arraste seus prints (Login, Home, Mapa) para a caixa abaixo.</p>
+
+    <div class="drop-zone" id="dropVerified">
+        <h2>Solte as imagens aqui!</h2>
+        <p>Elas serão convertidas para <b>2048 x 2732 (iPad Pro)</b> automaticamente.</p>
+    </div>
+
+    <div class="output" id="gallery"></div>
+
+    <script>
+        const TARGET_WIDTH = 2048;
+        const TARGET_HEIGHT = 2732;
+
+        const dropZone = document.getElementById('dropVerified');
+        const gallery = document.getElementById('gallery');
+
+        dropZone.addEventListener('dragover', (e) => { e.preventDefault(); });
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            const files = e.dataTransfer.files;
+            handleFiles(files);
+        });
+
+        function handleFiles(files) {
+            Array.from(files).forEach(file => {
+                if (!file.type.startsWith('image/')) return;
+
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    const img = new Image();
+                    img.onload = () => processImage(img, file.name);
+                    img.src = event.target.result;
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        function processImage(img, originalName) {
+            const canvas = document.createElement('canvas');
+            canvas.width = TARGET_WIDTH;
+            canvas.height = TARGET_HEIGHT;
+            const ctx = canvas.getContext('2d');
+
+            // Draw and stretch slightly to fit perfectly (cover mode)
+            // Or just fill (stretch) if aspect ratio is close
+            ctx.drawImage(img, 0, 0, TARGET_WIDTH, TARGET_HEIGHT);
+
+            const dataUrl = canvas.toDataURL('image/png');
+
+            // Create download link
+            const container = document.createElement('div');
+            const preview = document.createElement('img');
+            preview.src = dataUrl;
+
+            const link = document.createElement('a');
+            link.href = dataUrl;
+            link.download = 'APPLE_' + originalName;
+            link.className = 'btn';
+            link.innerText = 'Baixar ' + originalName;
+
+            container.appendChild(preview);
+            container.appendChild(document.createElement('br'));
+            container.appendChild(link);
+            gallery.appendChild(container);
+        }
+    </script>
+</body>
+
+</html>
