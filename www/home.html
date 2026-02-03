@@ -1195,6 +1195,8 @@
         }
 
 
+        let lastIgnitionStatus = {}; // Global to track ignition state changes
+
         // 2. Carregar Veículos (Robust Function)
         function loadVehicles(uid) {
             const list = document.querySelector('.vehicles-list');
@@ -1202,26 +1204,29 @@
 
             const vehiclesRef = db.collection("tenants").doc("UNIK").collection("vehicles").where("userId", "==", uid);
 
-            // Timeout safety (5 seconds)
+            // Fetch User for Home Address
+            let homePos = null;
+            db.collection("tenants").doc("UNIK").collection("users").where("uid", "==", auth.currentUser.uid).get()
+                .then(snap => {
+                    if (!snap.empty) {
+                        const data = snap.docs[0].data();
+                        if (data.homeLat && data.homeLng) {
+                            homePos = { lat: data.homeLat, lng: data.homeLng };
+                        }
+                    }
+                });
+
             const safetyTimeout = setTimeout(() => {
                 if (list.innerHTML.includes('ph-spinner')) {
                     list.innerHTML = '<div class="vehicle-card" style="padding:20px; text-align:center;"><p style="color:red;">Tempo limite excedido. Verifique sua conexão.</p></div>';
                 }
             }, 5000);
 
-            // Using onSnapshot for better reliability and realtime updates
             vehiclesRef.onSnapshot((snap) => {
                 clearTimeout(safetyTimeout);
-
                 if (snap.empty) {
-                    list.innerHTML = `
-                        <div class="vehicle-card" style="text-align:center;">
-                            <i class="ph-duotone ph-car" style="font-size:40px; color:#94a3b8; display:block; margin:0 auto 10px auto;"></i>
-                            <h3 style="font-size:16px;">Nenhum veículo</h3>
-                            <p style="font-size:12px;">Entre em contato para ativar.</p>
-                        </div>
-                    `;
-                    populateSelect([]); // Clear select
+                    list.innerHTML = '<div class="vehicle-card" style="text-align:center;"><i class="ph ph-car" style="font-size:40px; color:#94a3b8; margin-bottom:10px;"></i><h3>Nenhum veículo</h3></div>';
+                    populateSelect([]);
                     return;
                 }
 
@@ -1230,65 +1235,118 @@
 
                 snap.forEach(doc => {
                     const car = doc.data();
-                    vehiclesForSelect.push({ id: doc.id, ...car });
+                    const carId = doc.id;
+                    vehiclesForSelect.push({ id: carId, ...car });
 
                     const card = document.createElement('div');
                     card.className = 'vehicle-card';
-                    // Determine Status Color
-                    let statusColor = '#dcfce7'; // green
-                    let statusText = 'Protegido';
-                    let statusIcon = 'ph-shield-check';
-                    let txtColor = '#166534';
-
-                    if (car.status === 'blocked') {
-                        statusColor = '#fee2e2';
-                        statusText = 'Bloqueado';
-                        statusIcon = 'ph-lock-key';
-                        txtColor = '#b91c1c';
-                    } else if (car.status === 'pending') {
-                        statusColor = '#fef9c3';
-                        statusText = 'Pendente';
-                        statusIcon = 'ph-clock';
-                        txtColor = '#854d0e';
-                    }
-
-                    card.innerHTML = `
-                        <div class="vehicle-header">
-                            <div class="vehicle-info">
-                                <h3>${car.model || 'Veículo'}</h3>
-                                <p>${car.plate || 'SEM-PLACA'} &bull; ${car.year || '----'}</p>
-                            </div>
-                            <span class="status-badge" style="background:${statusColor}; color:${txtColor};">
-                                <i class="ph-fill ${statusIcon}"></i> 
-                                ${statusText}
-                            </span>
-                        </div>
-                        <div class="location-row" style="margin-bottom: 12px;">
-                            <i class="ph-fill ph-map-pin loc-icon"></i>
-                            <span class="loc-text">${car.address || 'Localização não disponível'}</span>
-                        </div>
-                        <button class="btn-map" onclick="window.location.href='mapa.html?id=${doc.id}'">
-                            <i class="ph-fill ph-crosshair"></i>
-                            VER NO MAPA
-                        </button>
-                    `;
+                    card.id = `card-${carId}`;
                     list.appendChild(card);
+
+                    // Subscribe to Tracker
+                    if (car.trackerId || car.imei) {
+                        const trackerRef = car.trackerId
+                            ? db.collection("tenants").doc("UNIK").collection("trackers").doc(car.trackerId)
+                            : db.collection("tenants").doc("UNIK").collection("trackers").where("imei", "==", car.imei);
+
+                        if (car.trackerId) {
+                            trackerRef.onSnapshot(tSnap => updateVehicleCard(card, carId, car, tSnap.exists ? tSnap.data() : null, homePos));
+                        } else {
+                            trackerRef.onSnapshot(tSnap => updateVehicleCard(card, carId, car, !tSnap.empty ? tSnap.docs[0].data() : null, homePos));
+                        }
+                    } else {
+                        updateVehicleCard(card, carId, car, null, homePos);
+                    }
                 });
 
                 populateSelect(vehiclesForSelect);
-
-            }, (error) => {
-                clearTimeout(safetyTimeout);
-                console.error("Erro ao carregar veículos (onSnapshot):", error);
-
-                // Show a retry button or clear error message
-                list.innerHTML = `
-                    <div class="vehicle-card" style="padding:20px; text-align:center;">
-                        <p style="color:red; margin-bottom:10px;">Erro ao carregar veículos.</p>
-                        <button onclick="window.location.reload()" style="padding:8px 16px; border-radius:8px; border:none; background:#0f172a; color:white;">Tentar Novamente</button>
-                    </div>
-                `;
             });
+        }
+
+        function updateVehicleCard(card, carId, car, tData, homePos) {
+            let statusColor = '#dcfce7'; let statusText = 'Protegido'; let statusIcon = 'ph-shield-check'; let txtColor = '#166534';
+
+            if (car.status === 'blocked') { statusColor = '#fee2e2'; statusText = 'Bloqueado'; statusIcon = 'ph-lock-key'; txtColor = '#b91c1c'; }
+            else if (car.status === 'pending') { statusColor = '#fef9c3'; statusText = 'Pendente'; statusIcon = 'ph-clock'; txtColor = '#854d0e'; }
+
+            const addressId = `addr-${carId}`;
+            const distId = `dist-${carId}`;
+            const lastAddr = card.querySelector(`#${addressId}`)?.innerText;
+
+            card.innerHTML = `
+                <div class="vehicle-header">
+                    <div class="vehicle-info">
+                        <h3>${car.model || 'Veículo'}</h3>
+                        <p>${car.plate || 'SEM-PLACA'} &bull; ${car.year || '----'}</p>
+                    </div>
+                    <span class="status-badge" style="background:${statusColor}; color:${txtColor};">
+                        <i class="ph-fill ${statusIcon}"></i> ${statusText}
+                    </span>
+                </div>
+                <div class="location-row" style="flex-direction: column; align-items: start; gap: 4px;">
+                    <div style="display:flex; align-items:center; gap:8px; width:100%;">
+                        <i class="ph-fill ph-map-pin loc-icon"></i>
+                        <span class="loc-text" id="${addressId}">${lastAddr || car.address || 'Localização não disponível'}</span>
+                    </div>
+                    <span id="${distId}" style="font-size: 10px; color: var(--gold); font-weight: 600; margin-left: 28px;"></span>
+                </div>
+                <button class="btn-map" onclick="window.location.href='mapa.html?id=${carId}'">
+                    <i class="ph-fill ph-crosshair"></i> VER NO MAPA
+                </button>
+            `;
+
+            if (tData && tData.lat && tData.lng) {
+                // Ignition Alarms
+                if (lastIgnitionStatus[carId] === false && (tData.ignition || tData.speed > 3)) {
+                    triggerIgnitionAlert(car.model || car.plate);
+                }
+                lastIgnitionStatus[carId] = !!(tData.ignition || tData.speed > 3);
+
+                // Reverse Geocode (nominatim) - avoid too many calls 
+                if (!lastAddr || lastAddr === 'Localização não disponível') {
+                    fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${tData.lat}&lon=${tData.lng}`)
+                        .then(r => r.json())
+                        .then(d => {
+                            const addr = d.address ? (d.address.road || d.address.suburb || 'Endereço') : 'Desconhecido';
+                            const el = document.getElementById(addressId);
+                            if (el) el.innerText = addr + (d.address.house_number ? `, ${d.address.house_number}` : '');
+                        });
+                }
+
+                // Distance home
+                if (homePos) {
+                    const dist = calculateDistance(tData.lat, tData.lng, homePos.lat, homePos.lng);
+                    const distEl = document.getElementById(distId);
+                    if (distEl) distEl.innerText = `📍 A ${dist.toFixed(1)} km da sua casa`;
+                }
+            }
+        }
+
+        function calculateDistance(lat1, lon1, lat2, lon2) {
+            const R = 6371; // km
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLon = (lon2 - lon1) * Math.PI / 180;
+            const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                Math.sin(dLon / 2) * Math.sin(dLon / 2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+            return R * c;
+        }
+
+        function triggerIgnitionAlert(name) {
+            // Local Notification if possible or Alert
+            if ("Notification" in window && Notification.permission === "granted") {
+                new Notification("Unik Rastreia", { body: `⚠️ Ignição LIGADA: ${name}` });
+            }
+            // Also show a toast in app
+            const toast = document.createElement('div');
+            toast.style.cssText = "position:fixed; top:20px; left:50%; transform:translateX(-50%); background:#ef4444; color:white; padding:15px 25px; border-radius:12px; z-index:9999; font-weight:bold; box-shadow:0 10px 30px rgba(0,0,0,0.3);";
+            toast.innerHTML = `<i class="ph-bold ph-warning"></i> IGNIÇÃO LIGADA: ${name}`;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 5000);
+
+            // Try vibration
+            if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
         }
 
         function populateSelect(vehicles) {

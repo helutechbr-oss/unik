@@ -396,7 +396,7 @@
             <div class="section-header">
                 <span class="section-title"><i class="ph ph-user-circle"></i> Meus Dados</span>
                 <span style="font-size: 12px; color: var(--gold); cursor: pointer;"
-                    onclick="alert('Solicite alteração no suporte.')">Editar</span>
+                    onclick="alert('Solicite alteração no suporte para dados principais.')">Editar</span>
             </div>
             <div class="data-row">
                 <span class="data-label">E-mail</span>
@@ -410,9 +410,21 @@
                 <span class="data-label">Telefone</span>
                 <span class="data-value">...</span>
             </div>
-            <div class="data-row" style="margin-bottom:0;">
+            <div class="data-row">
                 <span class="data-label">Membro desde</span>
                 <span class="data-value">...</span>
+            </div>
+            <div style="margin-top: 15px; border-top: 1px solid #f1f5f9; padding-top: 15px;">
+                <label style="font-size: 11px; color: var(--text-gray); display: block; margin-bottom: 5px;">📍 ENDEREÇO
+                    RESIDENCIAL (Para distância no mapa)</label>
+                <div style="display: flex; gap: 8px;">
+                    <input type="text" id="homeAddress" placeholder="Rua, Número, Bairro, Cidade"
+                        style="flex: 1; padding: 10px; border-radius: 8px; border: 1px solid var(--border); font-size: 13px; outline: none;">
+                    <button onclick="saveHomeAddress()"
+                        style="background: var(--navy-dark); color: var(--gold); border: none; padding: 0 15px; border-radius: 8px; font-weight: 600; font-size: 12px; cursor: pointer;">
+                        SALVAR
+                    </button>
+                </div>
             </div>
         </div>
 
@@ -594,9 +606,10 @@
                             document.querySelectorAll('.data-value')[3].innerText = `${month.charAt(0).toUpperCase() + month.slice(1)}/${year}`;
                         }
 
-                        // Update Phone and CPF
+                        // Update Phone, CPF and Home Address
                         if (userData.cpf) document.querySelectorAll('.data-value')[1].innerText = userData.cpf;
                         if (userData.phone) document.querySelectorAll('.data-value')[2].innerText = userData.phone;
+                        if (userData.homeAddress) document.getElementById('homeAddress').value = userData.homeAddress;
                     } else {
                         document.querySelector('.user-name').innerText = user.displayName || "Associado";
                     }
@@ -611,6 +624,46 @@
                 window.location.href = 'index.html';
             }
         });
+
+        window.saveHomeAddress = async function () {
+            const address = document.getElementById('homeAddress').value;
+            if (!address) return alert("Insira um endereço.");
+
+            const user = auth.currentUser;
+            if (!user) return;
+
+            showToast("Salvando endereço...");
+
+            try {
+                // 1. Geocode to get lat/lng (Best effort)
+                const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&limit=1`);
+                const data = await res.json();
+
+                let lat = null, lng = null;
+                if (data && data.length > 0) {
+                    lat = parseFloat(data[0].lat);
+                    lng = parseFloat(data[0].lon);
+                }
+
+                // 2. Update Firestore
+                const querySnapshot = await db.collection("tenants").doc("UNIK").collection("users")
+                    .where("uid", "==", user.uid)
+                    .get();
+
+                if (!querySnapshot.empty) {
+                    const docId = querySnapshot.docs[0].id;
+                    await db.collection("tenants").doc("UNIK").collection("users").doc(docId).update({
+                        homeAddress: address,
+                        homeLat: lat,
+                        homeLng: lng
+                    });
+                    showToast("Endereço salvo!");
+                }
+            } catch (err) {
+                console.error(err);
+                alert("Erro ao salvar endereço.");
+            }
+        };
 
         // 2. Upload Photo (New Feature)
         window.uploadProfilePhoto = async function (input) {

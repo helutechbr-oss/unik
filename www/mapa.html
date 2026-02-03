@@ -820,14 +820,25 @@
         // Safety Timeout for Loading
         setTimeout(() => { dismissLoading(); }, 8000);
 
+        let homePos = null;
+        let lastIgn = null;
+
         // --- 4. AUTH & DATA LOADING ---
         auth.onAuthStateChanged(async (user) => {
             if (user) {
+                // Fetch Home Address
+                db.collection("tenants").doc("UNIK").collection("users")
+                    .where("uid", "==", user.uid).get().then(snap => {
+                        if (!snap.empty) {
+                            const d = snap.docs[0].data();
+                            if (d.homeLat && d.homeLng) homePos = { lat: d.homeLat, lng: d.homeLng };
+                        }
+                    });
+
                 if (selectedVehicleId) {
                     initSingleVehicle(selectedVehicleId);
                 } else {
-                    // Fallback if no ID passed (redirect or show error)
-                    window.location.href = 'mapamenu.html'; // Go back to menu
+                    window.location.href = 'mapamenu.html';
                 }
             } else {
                 window.location.href = 'index.html';
@@ -951,6 +962,16 @@
             const ignEl = document.getElementById('uiIgnition');
             ignEl.innerText = isIgn ? 'Ligada' : 'Deslig.';
             document.getElementById('iconIgnition').style.color = isIgn ? 'var(--success)' : 'var(--gray)';
+
+            // Ignition Monitor for Alert
+            if (lastIgn === false && isIgn === true) {
+                if (window.Notification && Notification.permission === "granted") {
+                    new Notification("Unik Rastreia", { body: `⚠️ Veículo LIGADO: ${currentVehicleData?.model || 'Seu veículo'}` });
+                }
+                showToast("🚨 VEÍCULO LIGADO!");
+                if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+            }
+            lastIgn = isIgn;
 
             const isBlocked = currentVehicleData.status === 'blocked';
             document.getElementById('uiLockStatus').innerText = isBlocked ? 'Bloq.' : 'Lib.';
@@ -1150,8 +1171,26 @@
                 .then(d => {
                     let a = d.address ? (d.address.road || d.address.suburb || 'Endereço') : 'Desc.';
                     if (d.address && d.address.house_number) a += `, ${d.address.house_number}`;
-                    el.innerHTML = `<i class="ph-fill ph-map-pin" style="color:var(--gold)"></i> ${a}`;
+
+                    let distText = "";
+                    if (homePos) {
+                        const dist = calculateDistance(lat, lng, homePos.lat, homePos.lng);
+                        distText = ` <span style="color:var(--gold); font-weight:bold; margin-left:8px;">(${dist.toFixed(1)} km de casa)</span>`;
+                    }
+
+                    el.innerHTML = `<i class="ph-fill ph-map-pin" style="color:var(--gold)"></i> ${a}${distText}`;
                 }).catch(() => el.innerHTML = '<i class="ph-fill ph-warning"></i>');
+        }
+
+        function calculateDistance(lat1, lon1, lat2, lon2) {
+            const R = 6371; // km
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLon = (lon2 - lon1) * Math.PI / 180;
+            const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                Math.sin(dLon / 2) * Math.sin(dLon / 2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+            return R * c;
         }
 
         // --- 8. HISTORY DRAWER ---
