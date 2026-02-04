@@ -980,6 +980,17 @@
         // Safety Timeout for Loading
         setTimeout(() => { dismissLoading(); }, 8000);
 
+        // --- NOTIFICATION PERMISSION ---
+        if ("Notification" in window) {
+            if (Notification.permission === "default") {
+                // Request silently or wait for user interaction?
+                // Ideally transparent, but let's try to request on load for PWA
+                try {
+                    Notification.requestPermission();
+                } catch (e) { console.log("Notif perm error"); }
+            }
+        }
+
         let homePos = null;
         let lastIgn = null;
 
