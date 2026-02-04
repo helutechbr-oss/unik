@@ -695,6 +695,60 @@
             cursor: pointer;
             box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
         }
+
+        /* Speed Alert & Config */
+        .speed-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 5000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .speed-card {
+            background: white;
+            width: 85%;
+            max-width: 320px;
+            border-radius: 20px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .speed-input {
+            width: 100%;
+            padding: 12px;
+            text-align: center;
+            font-size: 24px;
+            font-weight: bold;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            margin: 15px 0;
+            outline: none;
+            color: var(--navy-dark);
+        }
+
+        .speed-input:focus {
+            border-color: var(--navy-dark);
+        }
+
+        .alert-marker-icon {
+            background: #ef4444;
+            border: 2px solid white;
+            color: white;
+            border-radius: 50%;
+            font-size: 10px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3);
+        }
     </style>
 </head>
 
@@ -717,6 +771,29 @@
             <button class="btn-action" onclick="toggleHistory()" title="Histórico e Relatórios">
                 <i class="ph-bold ph-clock-counter-clockwise"></i>
             </button>
+            <button class="btn-action" onclick="openSpeedConfig()" title="Alerta de Velocidade"
+                style="color:var(--danger)">
+                <i class="ph-bold ph-gauge"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- SPEED MODAL -->
+    <div id="speedModal" class="speed-modal" style="display:none;">
+        <div class="speed-card">
+            <div style="font-size:40px; color:var(--danger); margin-bottom:10px;"><i class="ph-fill ph-gauge"></i></div>
+            <h3 style="margin:0; color:var(--navy-dark); font-size:18px;">Alerta de Velocidade</h3>
+            <p style="color:var(--gray); font-size:13px; margin:5px 0;">Defina o limite máximo (km/h) para ser
+                notificado.</p>
+
+            <input type="number" id="speedLimitInput" class="speed-input" placeholder="0" inputmode="numeric">
+
+            <div style="display:flex; gap:10px;">
+                <button onclick="closeSpeedConfig()"
+                    style="flex:1; padding:12px; border-radius:12px; border:none; background:#f1f5f9; color:var(--gray); font-weight:600;">Cancelar</button>
+                <button onclick="saveSpeedLimit()"
+                    style="flex:1; padding:12px; border-radius:12px; border:none; background:var(--navy-dark); color:white; font-weight:600;">Salvar</button>
+            </div>
         </div>
     </div>
 
@@ -1430,6 +1507,30 @@
             grp.style.display = 'block';
         };
 
+        // --- SPEED ALERT LOGIC ---
+        window.openSpeedConfig = () => {
+            document.getElementById('speedModal').style.display = 'flex';
+            const currentLimit = currentVehicleData?.speedLimit || 0;
+            document.getElementById('speedLimitInput').value = currentLimit > 0 ? currentLimit : '';
+        };
+
+        window.closeSpeedConfig = () => {
+            document.getElementById('speedModal').style.display = 'none';
+        };
+
+        window.saveSpeedLimit = () => {
+            const limit = parseInt(document.getElementById('speedLimitInput').value);
+            if (isNaN(limit) || limit < 0) return alert("Digite um valor válido.");
+
+            db.collection("tenants").doc("UNIK").collection("vehicles").doc(selectedVehicleId)
+                .update({ speedLimit: limit })
+                .then(() => {
+                    showToast("Limite de velocidade salvo!");
+                    closeSpeedConfig();
+                })
+                .catch(() => alert("Erro ao salvar."));
+        };
+
         // Reproduction State
         let reproIndex = 0;
         let reproInterval = null;
@@ -1544,12 +1645,17 @@
         function renderHistoryOnMap(points) {
             const latlngs = points.map(p => [p.lat, p.lng]);
 
-            // Draw Polyline
+            // Cased Line Style (Road-like)
+            // 1. Thick white background
+            L.polyline(latlngs, {
+                color: 'white', weight: 6, opacity: 1, lineJoin: 'round', lineCap: 'round'
+            }).addTo(map);
+
+            // 2. Main color (Blue)
             historyPolyline = L.polyline(latlngs, {
-                color: '#2563eb',
-                weight: 4,
-                opacity: 0.8,
-                dashArray: '5, 10'
+                color: '#2563eb', weight: 4, opacity: 1, lineJoin: 'round', lineCap: 'round'
+                // Removed dashArray for solid road look, or keep it if requested? User said "improved tracing".
+                // Solid lines look better for "streets".
             }).addTo(map);
 
             // Bounds
@@ -1573,10 +1679,27 @@
             historyMarkers.push(L.marker(startPoint, { icon: startIcon, title: "Início" }).addTo(map).bindPopup("Início do Trajeto"));
             historyMarkers.push(L.marker(endPoint, { icon: endIcon, title: "Fim" }).addTo(map).bindPopup("Fim do Trajeto"));
 
-            // Detect Stops (Stops > 5 min)
+            // Detect Stops & Speeding
             let stopCount = 0;
             const listEl = document.getElementById('histList');
-            listEl.innerHTML = '<h5 style="font-size:11px; color:var(--gray); margin:0 0 10px 0;">EVENTOS DO TRAJETO</h5>';
+            listEl.innerHTML = '<h5 style="font-size:11px; color:var(--gray); margin:0 0 10px 0;">LINHA DO TEMPO</h5>';
+
+            // Speed Limit Check
+            const maxSpeedLimit = currentVehicleData?.speedLimit || 999;
+
+            points.forEach((p, i) => {
+                // Speed Violation (Show marker only for peaks, simple logic to avoid clutter)
+                if (p.speed > maxSpeedLimit && (!points[i - 1] || points[i - 1].speed <= maxSpeedLimit)) {
+                    const alertIcon = L.divIcon({
+                        className: 'custom-div-icon',
+                        html: `<div class="alert-marker-icon">${Math.round(p.speed)}</div>`,
+                        iconSize: [24, 24], iconAnchor: [12, 12]
+                    });
+                    const m = L.marker([p.lat, p.lng], { icon: alertIcon, zIndexOffset: 1000 }).addTo(map)
+                        .bindPopup(`<b style="color:red">Excesso de Velocidade</b><br>${Math.round(p.speed)} km/h<br>Limite: ${maxSpeedLimit} km/h`);
+                    historyMarkers.push(m);
+                }
+            });
 
             for (let i = 0; i < points.length - 1; i++) {
                 const p1 = points[i];
