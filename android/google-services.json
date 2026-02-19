@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "804875668297",
+    "project_id": "rastreiamais-81087",
+    "storage_bucket": "rastreiamais-81087.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:804875668297:android:5b5899d73db345ab192898",
+        "android_client_info": {
+          "package_name": "br.com.unikprotege.rastreador"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAcXXIEh_DqxA4_AhAk2L8fXfhvOFubmTQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

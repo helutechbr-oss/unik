@@ -1117,8 +1117,8 @@
 
         // Fim dos imports de dependência
 
-        // NOTE: Substitua 'API_URL', 'USER' e 'PASS' pelas credenciais reais do SGA.
-        const sga = new SGAClient('https://api.hinova.com.br/api/sga/v2', 'SEU_USUARIO_SGA', 'SUA_SENHA_SGA');
+        // Inicializa client SGA com o token fornecido
+        const sga = new SGAClient('https://api.hinova.com.br/api/sga/v2', 'ac6efafd857f354bc70d095df21f27b4487c208ef79db46903e59f4d56dcf5466c1c8ea197d79733c7314f7238f25ab34d2849918f558f3168820840cac22458238b19e3778b9fb050a22ba53864ca45656faa501c5b5aa55f872d3655afec75');
 
         let currentUser = null;
         let crmUserId = null;
@@ -1145,6 +1145,8 @@
                         // Fetch Boletos SGA
                         if (userData.cpf) {
                             fetchBoletosSGA(userData.cpf);
+                        } else {
+                            console.log("CPF ausente no cadastro, não foi possível buscar boletos.");
                         }
                     } else {
                         crmUserId = user.uid;
@@ -1435,15 +1437,34 @@
         ];
 
         async function fetchBoletosSGA(cpf) {
-            // Recurso desativado a pedido
-            // console.log("Buscando boletos SGA para:", cpf);
+            console.log("Buscando boletos SGA para CPF:", cpf);
+            try {
+                // Remove caracteres não numéricos do CPF antes de enviar
+                const cleanCpf = cpf ? cpf.replace(/\D/g, '') : '';
+                if (!cleanCpf) return;
+
+                const data = await sga.getBoletos(cleanCpf);
+
+                if (Array.isArray(data)) {
+                    userBoletos = data;
+                } else if (data && data.boletos && Array.isArray(data.boletos)) {
+                    userBoletos = data.boletos;
+                } else {
+                    userBoletos = [];
+                }
+                console.log("Boletos carregados:", userBoletos.length);
+
+            } catch (err) {
+                console.error("Erro ao carregar boletos:", err);
+                userBoletos = [];
+            }
         }
 
-
-        let userBoletos = []; // Armazena boletos brutos
+        let userBoletos = [];
 
         function processBoletos(boletos) {
-            // Recurso desativado a pedido
+            // Função mantida apenas para referência ou compatibilidade
+            userBoletos = boletos;
         }
 
         window.openInvoicesModal = function () {
@@ -1457,18 +1478,20 @@
                     <div style="background:#f8fafc; padding:16px; border-radius:12px; margin-bottom:12px; border:1px solid #e2e8f0;">
                          <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px;">
                             <div>
-                                <h4 style="margin:0; color:var(--navy-dark); font-size:14px;">Fatura #${b.nosso_numero}</h4>
-                                <p style="margin:0; color:var(--text-gray); font-size:12px;">Vence em: ${b.data_vencimento}</p>
+                                <h4 style="margin:0; color:var(--navy-dark); font-size:14px;">Fatura #${b.nosso_numero || '---'}</h4>
+                                <p style="margin:0; color:var(--text-gray); font-size:12px;">Vence em: ${b.data_vencimento || '--/--'}</p>
                             </div>
-                            <span style="background:${b.situacao === 'PAGO' ? '#dcfce7' : '#fee2e2'}; color:${b.situacao === 'PAGO' ? '#166534' : '#b91c1c'}; font-size:10px; padding:4px 8px; border-radius:4px; font-weight:700;">
+                            <span style="background:${(b.situacao && b.situacao.toUpperCase().includes('PAGO')) ? '#dcfce7' : '#fee2e2'}; color:${(b.situacao && b.situacao.toUpperCase().includes('PAGO')) ? '#166534' : '#b91c1c'}; font-size:10px; padding:4px 8px; border-radius:4px; font-weight:700;">
                                 ${b.situacao || 'ABERTO'}
                             </span>
                          </div>
                          <div style="display:flex; justify-content:space-between; align-items:center;">
-                            <span style="font-weight:700; color:var(--navy-dark);">R$ ${b.valor_boleto}</span>
+                            <span style="font-weight:700; color:var(--navy-dark);">R$ ${b.valor_boleto || '0,00'}</span>
+                            ${b.link_boleto ? `
                             <button onclick="window.open('${b.link_boleto}', '_blank')" style="background:var(--navy-dark); color:var(--gold); border:none; padding:8px 16px; border-radius:8px; font-size:12px; font-weight:600; cursor:pointer;">
                                 <i class="ph-bold ph-receipt"></i> Pagar
                             </button>
+                            ` : '<span style="font-size:10px; color:gray;">Link indisponível</span>'}
                          </div>
                     </div>
                 `).join('');

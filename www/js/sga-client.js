@@ -1,43 +1,22 @@
 
 export class SGAClient {
-    constructor(baseUrl, user, pass) {
+    constructor(baseUrl, token) {
         this.baseUrl = baseUrl;
-        this.credentials = { usuario: user, senha: pass };
-        this.token = localStorage.getItem('sga_token');
-    }
-
-    async authenticate() {
-        if (this.token) return this.token;
-
-        try {
-            const res = await fetch(`${this.baseUrl}/usuario/autenticar`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(this.credentials)
-            });
-
-            const data = await res.json();
-            if (data.token_usuario) {
-                this.token = data.token_usuario;
-                localStorage.setItem('sga_token', this.token);
-                return this.token;
-            } else {
-                throw new Error('Token não retornado pela API SGA');
-            }
-        } catch (e) {
-            console.error('Erro na autenticação SGA:', e);
-            return null;
-        }
+        this.token = token;
     }
 
     async getBoletos(cpf) {
-        const token = await this.authenticate();
-        if (!token) return [];
+        if (!this.token) {
+            console.error('Token SGA não configurado.');
+            return [];
+        }
 
-        // Define um intervalo de datas razoável (ex: últimos 30 dias até próximos 60 dias)
+        // Define um intervalo: boletos vencidos ha 30 dias ate vencerem daqui a 90 dias
         const today = new Date();
-        const past = new Date(); past.setDate(today.getDate() - 30);
-        const future = new Date(); future.setDate(today.getDate() + 60);
+        const past = new Date(); 
+        past.setDate(today.getDate() - 30);
+        const future = new Date(); 
+        future.setDate(today.getDate() + 90);
 
         const formatDate = d => d.toLocaleDateString('pt-BR'); // dd/mm/yyyy
 
@@ -45,7 +24,7 @@ export class SGAClient {
             cpf_associado: cpf.replace(/\D/g, ''), // Envia apenas números
             data_vencimento_inicial: formatDate(past),
             data_vencimento_final: formatDate(future),
-            // codigo_situacao_boleto: 1 // Pode filtrar por 'Aberto' se soubermos o código. Geralmente 1 ou 'ABERTO'.
+            link_boleto: true // Solicita o link do boleto
         };
 
         try {
@@ -53,20 +32,34 @@ export class SGAClient {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
+                    'Authorization': `Bearer ${this.token}`
                 },
                 body: JSON.stringify(payload)
             });
 
+            if (!res.ok) {
+                console.error(`Erro na API SGA: ${res.status} ${res.statusText}`);
+                return [];
+            }
+
             const data = await res.json();
-            // A API retorna algo como { boletos: [...] } ou array direto? 
-            // Exemplo Retorno Doc: { "nosso_numero": "...", ... } (Parece um objeto único ou array?)
-            // O exemplo de retorno da doc para listar/boleto-associado/periodo mostra chaves soltas...
-            // Mas listar/boleto-associado-veiculo mostra um array em outro lugar. 
-            // Vamos assumir que retorna uma lista ou um objeto encapsulando.
-            // O endpoint 'listar/boleto' retorna um array no exemplo. 
-            // Vamos retornar 'data' por enquanto e tratar no frontend.
-            return data; 
+            
+            // A API pode retornar { boletos: [...] } ou array direto ou outras chaves
+            // A documentação sugere retorno de chaves soltas no exemplo, ou array no example response 
+            // "Exemplo Retorno: { nosso_numero: ... }" (um objeto só?)
+            // Se retornar array de objetos, ok.
+            
+            if (Array.isArray(data)) {
+                 return data;
+            } else if (data && data.boletos && Array.isArray(data.boletos)) {
+                 return data.boletos;
+            } else if (data && data.nosso_numero) {
+                 // Retornou um unico objeto
+                 return [data];
+            } else {
+                 return [];
+            }
+
         } catch (e) {
             console.error('Erro ao buscar boletos:', e);
             return [];
